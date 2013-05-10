@@ -26,13 +26,24 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.redhat.victims.VictimsScannerCLI</mainClass>
+							<mainClass>com.redhat.victims.VictimsCLI</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
+					<finalName>${project.build.finalName}-standalone</finalName>
+					<appendAssemblyId>false</appendAssemblyId>
 				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
