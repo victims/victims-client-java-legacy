@@ -40,3 +40,7 @@ usage: VictimsServiceCLI
  -s,--server <arg>   use this as the victims server
  -u,--updates        fetch updates from the server (incompatible with -r)
 ```
+### Clearning cached database
+```sh
+rm -rf .victims-client-cache/
+```
