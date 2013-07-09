@@ -28,7 +28,7 @@ public class DownloadUtils {
 	            url = new URL(mavenRepoURL+query+"."+type);
 	            int httpCode = checkIfValidURL(url);
 	            if(httpCode != 200){
-	            	//TODO log a mesasge saying that the file could be downloaded
+	            	//TODO log a message saying that the file could be downloaded
 	            	return false;
 	            }else{
 	            	//TODO log downloaded successfully
@@ -55,6 +55,7 @@ public class DownloadUtils {
 	}
 
 	public static String checkMavenForLatestVersion(Dependency dep) throws MalformedURLException{
+
         Document result = null;
 		try {
 			result = Jsoup.parse(new URL(mavenAPISearch.replace("<insert>", dep.getGroupId())), 1000);
