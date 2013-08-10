@@ -105,7 +105,6 @@ public class VictimsFileDB {
 	public void sync() throws ParseException {
 		SimpleDateFormat sdf = new SimpleDateFormat(VictimsRecord.DATE_FORMAT);
 		Date since = sdf.parse("1900-01-01T00:00:00");
-
 		// get last updated if available
 		try {
 			if (lastUpdate.exists()) {

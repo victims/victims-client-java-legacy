@@ -28,6 +28,10 @@ public class Dependency {
 		return "Dependency [groupId=" + groupId + ", artifactId=" + artifactId
 				+ ", version=" + version + "]";
 	}
+	
+	public String getName(){
+		return groupId+","+artifactId+"-"+version;
+	}
 
 	public boolean isRetrieved() {
 		return retrieved;

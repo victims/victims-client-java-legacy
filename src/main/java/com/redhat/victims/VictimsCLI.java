@@ -42,7 +42,6 @@ public class VictimsCLI extends AbstractCLI {
 				return vdb;
 	}
 	public static void main(String[] args) throws IOException {
-		System.err.println("VICTIMSCLI main");
 		@SuppressWarnings("unused")
 		VictimsCLI scanner = new VictimsCLI(args);
 	}

@@ -74,7 +74,7 @@ public class VictimsServiceCLI extends AbstractCLI {
 			}
 		}else if(line.hasOption("p")){
 			//TODO scanning pom
-			System.err.println("scanning "+line.getOptionValue("p"));
+			System.out.println("scanning "+line.getOptionValue("p"));
 			Overseer.scanPom(line.getOptionValue("p"));
 			
 		}

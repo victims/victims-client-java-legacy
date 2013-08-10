@@ -5,24 +5,16 @@ import java.io.File;
 public class PomUtils {
 	
 	public static String resolveDependencyLocation(Dependency dep){
-		String dir = System.getenv("HOMEDRIVE")+System.getenv("HOMEPATH")+"\\.M2\\repository\\"+resolveName(dep,"\\");		
+		String dir = System.getenv("HOMEDRIVE")+System.getenv("HOMEPATH")+"\\.m2\\repository\\"+resolveName(dep,"\\");		
 		File directory = new File(dir);
 		if(!directory.exists()){
-			/**
-			 * TODO
-			 * check to see if the system path is set 
-			 * use that to get the location
-			 * if system path isn't set then download the repo
-			 */
-			System.err.println("Directory doesn't exist: "+dir);
-			System.err.println("Downloading dependancy: "+dep.getGroupId()+"-"+dep.getArtifactId()+"-"+dep.getVersion());
-			System.err.println("Done...Not really");
-			/*
-			 * two options
-			 * make one
-			 * check to see if this is really where the m2 directory is
-			 */
-			directory.mkdir();
+			System.out.println("Directory doesn't exist: "+dir);
+			
+			if(directory.mkdirs()){
+				System.out.println("directory created...");
+			}else{
+				System.out.println("directory cannot be created...");
+			}
 		}
 			return dir;
 	}
@@ -35,5 +27,6 @@ public class PomUtils {
 		}
 		return name;
 	}
+	
 	
 }

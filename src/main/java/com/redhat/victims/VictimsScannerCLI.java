@@ -12,7 +12,6 @@ public class VictimsScannerCLI extends AbstractCLI {
 	}
 
 	public void run(CommandLine line, OutputStream os) throws IOException {
-		System.err.println("ScannerCLI");
 		for (String arg : line.getArgs()) {
 			VictimsScanner.scan(arg, os);
 		}

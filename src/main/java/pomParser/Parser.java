@@ -40,6 +40,7 @@ public class Parser {
 			String scope = "";
 			String systemPath = "";
 			for (Element elemChild : elem.children()) {
+				System.err.println(elemChild);
 				if (elemChild.nodeName().equals("groupid")) {
 					groupId = susbtituteVariables(elemChild.html());
 				} else if (elemChild.nodeName().equals("artifactid")) {
@@ -53,6 +54,7 @@ public class Parser {
 				}else if (elemChild.nodeName().equals("scope")) {
 					scope = susbtituteVariables(elemChild.html());
 				}else if (elemChild.nodeName().equals("systemPath")) {
+					System.err.println("system path found: "+groupId);
 					systemPath = susbtituteVariables(elemChild.html());
 				}
 			}

@@ -24,15 +24,12 @@ public class DownloadUtils {
 	        URL url;
 	        DownloaderProxyAuthenticator.setupProxy();
 	        try {
-	        	System.err.println(mavenRepoURL+query+"."+type);
 	            url = new URL(mavenRepoURL+query+"."+type);
 	            int httpCode = checkIfValidURL(url);
 	            if(httpCode != 200){
-	            	//TODO log a message saying that the file could be downloaded
 	            	return false;
 	            }else{
-	            	//TODO log downloaded successfully
-	            	System.err.println("downloaded successfully");
+	            	System.out.println("downloaded "+query+" successfully");
 	            }
 	            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
 	            new File(saveTo.substring(0,saveTo.lastIndexOf("\\"))).mkdirs();
@@ -62,8 +59,9 @@ public class DownloadUtils {
 		} catch (IOException e) {
 			//TODO log error display message
 		}
-		//TODO check to see if result is null (the connection is null)
-		
+		if(result == null){
+			return "";
+		}
         return result.select("str[name=latestVersion]").html();
 }
 	private static int checkIfValidURL(URL url) throws IOException{
