@@ -53,8 +53,7 @@ public class VictimsServiceCLI extends AbstractCLI {
 
 			// we only need a service if we plan to update or remove
 			if (line.hasOption("s")) {
-				service = new VictimsService();
-				service.baseURI = line.getOptionValue("s");
+				service = new VictimsService(line.getOptionValue("s"));
 			} else {
 				// use default uri
 				service = new VictimsService();
@@ -74,7 +73,6 @@ public class VictimsServiceCLI extends AbstractCLI {
 				}
 			}
 		}else if(line.hasOption("p")){
-			//TODO scanning pom
 			System.out.println("scanning "+line.getOptionValue("p"));
 			Overseer.scanPom(line.getOptionValue("p"));
 			

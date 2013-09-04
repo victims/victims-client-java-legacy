@@ -46,12 +46,8 @@ public class VictimsFileDB {
 	public VictimsFileDB(String cacheDir) {
 		this.cache = getDir(cacheDir);
 		this.dbroot = getDir(mergePath(cache, DB_ROOT));
-		try {
-			this.service = new VictimsService();
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		System.err.println(this.dbroot);
+		this.service = new VictimsService();
 		this.lastUpdate = new File(mergePath(cache, LAST_UPDATED_FILE));
 		this.entryCache = new EntryCache();
 	}
