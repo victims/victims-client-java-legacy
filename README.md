@@ -31,16 +31,26 @@ usage: VictimsScannerCLI
 ```sh
 [abn@whippersnapper target (master)]$ java -cp victims-client-1.0-SNAPSHOT-standalone.jar com.redhat.victims.VictimsServiceCLI -h
 usage: VictimsServiceCLI
- -d,--date <arg>     date-time since which updates/removals are required
-                     (format:yyyy-MM-dd'T'HH:mm:ss)
- -h,--help           print this message
- -o,--output <arg>   output to this file, if not provided standard-out
-                     will be used
- -r,--removes        fetch removals from the server (incompatible with -u)
- -s,--server <arg>   use this as the victims server
- -u,--updates        fetch updates from the server (incompatible with -r)
+ -d,--date <arg>       date-time since which updates/removals are required
+                       (format:yyyy-MM-dd'T'HH:mm:ss)
+ -h,--help             print this message
+ -o,--output <arg>     output to this file, if not provided standard-out
+                       will be used
+ -p,--pom file <arg>   To scan the dependancies before the build, given
+                       the super pom
+ -r,--removes          fetch removals from the server (incompatible with
+                       -u)
+ -s,--server <arg>     use this as the victims server
+ -u,--updates          fetch updates from the server (incompatible with
+                       -r)
+
 ```
 ### Clearning cached database
 ```sh
 rm -rf .victims-client-cache/
+```
+### scanning a project pre-build
+```sh
+[ben@laptop target (master)]$ java -cp victims-client-1.0-SNAPSHOT-standalone.jar com.redhat.victims.VictimsServiceCLI -p <location of pom file>
+
 ```

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ public class VictimsFileDB {
 	public VictimsFileDB(String cacheDir) {
 		this.cache = getDir(cacheDir);
 		this.dbroot = getDir(mergePath(cache, DB_ROOT));
+		System.err.println(this.dbroot);
 		this.service = new VictimsService();
 		this.lastUpdate = new File(mergePath(cache, LAST_UPDATED_FILE));
 		this.entryCache = new EntryCache();
@@ -105,7 +107,6 @@ public class VictimsFileDB {
 	public void sync() throws ParseException {
 		SimpleDateFormat sdf = new SimpleDateFormat(VictimsRecord.DATE_FORMAT);
 		Date since = sdf.parse("1900-01-01T00:00:00");
-
 		// get last updated if available
 		try {
 			if (lastUpdate.exists()) {

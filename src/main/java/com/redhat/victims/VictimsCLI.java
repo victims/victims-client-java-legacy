@@ -14,15 +14,7 @@ public class VictimsCLI extends AbstractCLI {
 	public void run(CommandLine line, OutputStream os) throws IOException {
 		System.setProperty("jsse.enableSNIExtension", "false");
 		
-		// initialize FileDB
-		VictimsFileDB vdb = new VictimsFileDB();
-		try {
-			System.out.println("Synchronizing database with web service.");
-			vdb.sync();
-			System.out.println("Sync complete.");
-		} catch (Exception e) {
-			System.out.println("Could not sync with service.");
-		}
+		VictimsFileDB vdb = intializeDB();
 		
 		// Scan given files/dir
 		for (String arg : line.getArgs()) {
@@ -37,6 +29,18 @@ public class VictimsCLI extends AbstractCLI {
 		}
 	}
 
+	public static VictimsFileDB intializeDB(){
+		// initialize FileDB
+				VictimsFileDB vdb = new VictimsFileDB();
+				try {
+					System.out.println("Synchronizing database with web service.");
+					vdb.sync();
+					System.out.println("Sync complete.");
+				} catch (Exception e) {
+					System.out.println("Could not sync with service.");
+				}
+				return vdb;
+	}
 	public static void main(String[] args) throws IOException {
 		@SuppressWarnings("unused")
 		VictimsCLI scanner = new VictimsCLI(args);

@@ -8,6 +8,8 @@ import java.util.Date;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
+import pomParser.Overseer;
+
 import com.redhat.victims.VictimsService.RecordStream;
 
 public class VictimsServiceCLI extends AbstractCLI {
@@ -22,6 +24,8 @@ public class VictimsServiceCLI extends AbstractCLI {
 		options.addOption("d", "date", true,
 				"date-time since which updates/removals are required (format:"
 						+ VictimsRecord.DATE_FORMAT + ")");
+		options.addOption("p", "pom file", true,
+				"To scan the dependancies before the build, given the super pom");
 		return options;
 	}
 
@@ -68,6 +72,10 @@ public class VictimsServiceCLI extends AbstractCLI {
 							.getBytes());
 				}
 			}
+		}else if(line.hasOption("p")){
+			System.out.println("scanning "+line.getOptionValue("p"));
+			Overseer.scanPom(line.getOptionValue("p"));
+			
 		}
 	}
 
