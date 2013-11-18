@@ -1,5 +1,6 @@
 victims-client-java
 ===================
+
 Standalone victims client to handle java artifacts.
 
 *WARNING:* This is currently under heavy development.
@@ -15,6 +16,7 @@ execute on top of the victims client REPL.
 ### Using the repl directly
 
 Starting the REPL
+
     $ java -jar victims-client-1.0-SNAPSHOT-standalone.jar 
 
 Asking for help

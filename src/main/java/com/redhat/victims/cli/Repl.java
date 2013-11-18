@@ -35,7 +35,7 @@ public class Repl {
     }
     
     Repl(){
-        this(System.in, System.out, "victims >");
+        this(System.in, System.out, "victims>");
     }
     
 
