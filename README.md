@@ -76,7 +76,7 @@ Setting configuration values
 Scanning a .jar file 
 
     victims> scan /home/gm/.m2/repository/org/springframework/spring/2.5.6/spring-2.5.6.jar
-
+    /home/gm/.m2/repository/org/springframework/spring/2.5.6/spring-2.5.6.jar VULNERABLE! CVE-2009-1190 CVE-2011-2730 CVE-2010-1622 
 
 Scripting victims tasks
 
