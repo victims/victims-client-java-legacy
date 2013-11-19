@@ -21,41 +21,47 @@ Starting the REPL
 
 Asking for help
 
-    victims> help
     help - displays help for each command
-        help [<command>]
+        help 
+        help config
 
     sync - update the victims database definitions
+        sync 
 
     config - list, sets or gets configuration options for the victims client
-        config list 
-        config get victims.home 
-        config set victims.home /home/user/example 
+        config list
+        config get victims.home
+        config set victims.home /home/user/example
 
     scan - scans the supplied .jar file and reports any vulnerabilities
         scan path/to/file.jar
+        scan /directory/full/of/jars
+
+    quiet - produces less verbose output
+        quiet 
 
     last-update - returns the last time the database was updated
+        last-update 
 
-    exit - quit this program
+    exit - exit from interactive mode
 
 
 Checking the last time you synchronized against the victims database
     
-    victims> last-update
+    > last-update
     Thu Jan 01 00:00:00 EST 1970
 
 
 Synchronizing with the database
 
-    victims> sync
+    > sync
     ok
 
 
 Listing configuration settings
     (Default values will be used if they are not set)
 
-    victims> config list
+    > config list
     victims.service.uri = null
     victims.service.entry = null
     victims.encoding = null
@@ -71,18 +77,17 @@ Listing configuration settings
 
 Setting configuration values
     
-    victims> config set victims.home /tmp/.victims
-    changed victims.home from (not set) to /tmp/.victims
+    > config set victims.home /tmp/.victims
 
 
 Scanning a .jar file 
 
-    victims> scan /home/gm/.m2/repository/org/springframework/spring/2.5.6/spring-2.5.6.jar
+    > scan /home/gm/.m2/repository/org/springframework/spring/2.5.6/spring-2.5.6.jar
     /home/gm/.m2/repository/org/springframework/spring/2.5.6/spring-2.5.6.jar VULNERABLE! CVE-2009-1190 CVE-2011-2730 CVE-2010-1622 
 
 Scripting victims tasks
 
-    java -jar victims-client-1.0-SNAPSHOT-standalone.jar  <<EOF;
+    java -jar victims-client-1.0-SNAPSHOT-standalone.jar  <<EOF
     last-update
     config set victims.cache.purge true
     config set victims.db.purge true
@@ -93,11 +98,58 @@ Scripting victims tasks
 
 ### Wrapper scripts
 
-TODO - The plan is to build a CLI on top of the REPL capabilities using 
-simple bash scripts. This is still something that I'm working on. However you 
-can still use this as a CLI by specifying arguments e.g. 
+#### Execution of single command 
 
     java -jar victims-client-1.0-SNAPSHOT-standalone.jar sync
-    find . -name \*.jar -exec java -jar victims-client-1.0-SNAPSHOT-standalone.jar scan {} \;
-    
 
+#### Scanning multiple files
+
+    find . -name \*.jar -exec java -jar victims-client-1.0-SNAPSHOT-standalone.jar scan {} \;
+ 
+
+#### Using the victims wrapper script
+
+An example shell script that wraps the victims .jar file is located in 
+src/resources/victims.  
+    
+```
+$ src/resources/victims
+Vulnerability definitions last updated: Tue Nov 19 15:33:33 EST 2013.
+
+victims - Check jar files against a database of known vulnerable 
+          artifacts. 
+
+Usage:
+
+    -h          Shows this help message.
+
+    -u          Updates the victims vulnerability definitions.
+
+    -s  <path>  Scans the supplied file or directory to see if 
+                it matches a definition in the victims vulnerability
+                database.
+
+    -i          Interactive mode.
+
+Examples:
+
+  To update the victims vulnerability definitions - 
+    victims -u 
+
+  To scan a jar file for vulnerabilities: 
+    victims -s example.jar 
+```
+
+#### Overwriting configuration settings. 
+
+Currently the wrapper script sets each configuration item based on an 
+environment variable, falling back to safe defaults. These settings are: 
+
+* VICTIMS_SERVICE_URI - The default URL where vulnerability definitions will be fetched.
+* VICTIMS_SERVICE_ENTRY - The entry point to the restful web service.
+* VICTIMS_ENCODING - The encoding used within victims data.
+* VICTIMS_HOME - Where the victims database, victims cache and the client .jar file live.
+* VICTIMS_CACHE_PURGE - Dumps the cache before the scan.
+* VICTIMS_ALGORITHMS - Selects the algorithm/s to use for hashing.
+* VICTIMS_DB_PURGE - Dumps the database of vulnerability definitions. 
+ 
