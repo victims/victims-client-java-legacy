@@ -12,6 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.redhat.victims.cli.commands.Command;
+import com.redhat.victims.cli.commands.CommandResult;
+import com.redhat.victims.cli.commands.HelpCommand;
+import com.redhat.victims.cli.commands.ExitCommand;
+import com.redhat.victims.cli.commands.QuietCommand;
 
 /**
  *
@@ -19,23 +24,26 @@ import java.util.regex.Pattern;
  */
 public class Repl {
     
-
+   
     private String prompt; 
     private BufferedReader in;
     private PrintStream out;
     private Map<String, Command> commands;
+    private Map<String, Boolean> flags;
     
     Repl(InputStream input, PrintStream output, String prompt){
         this.in = new BufferedReader(new InputStreamReader(input));
         this.out = output;
         this.prompt = prompt;
         this.commands = new HashMap();  
-        register(new Help());
-        register(new Exit());
+        this.flags = new HashMap();
+        register(new HelpCommand(this.commands));
+        register(new QuietCommand(this.flags));
+        register(new ExitCommand());
     }
     
     Repl(){
-        this(System.in, System.out, "victims>");
+        this(System.in, System.out, ">");
     }
     
 
@@ -43,20 +51,40 @@ public class Repl {
         commands.put(cmd.getName(), cmd);
     }
       
+    final private static String unquote(String s){
+        if (s.isEmpty()){
+            return s;
+        }
+        int start = 0; 
+        int end = s.length();
+        if (s.startsWith("\'") || s.startsWith("\"")){
+            start++;
+        }
+        if (s.endsWith("\'") || s.endsWith("\"")){
+            end--;
+        }
+     
+        return s.substring(start, end);
+       
+    }
+    
     final private static List<String> parse(String cmd) {
         
-        List<String> matchList = new ArrayList<String>();
+        List<String> tokens = new ArrayList<String>();
         Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
         Matcher regexMatcher = regex.matcher(cmd);
         while (regexMatcher.find()) {
-            matchList.add(TUI.unquote(regexMatcher.group()));
+            tokens.add(unquote(regexMatcher.group()));
         }
-        return matchList;
+        return tokens;
     }
     
     final String read(){
         try {
-            out.printf("%s ", prompt);
+            Boolean quietMode = flags.get("quiet");
+            if (quietMode == null || ! quietMode.booleanValue())
+              out.printf("%s ", prompt);
+            
             return in.readLine();
         } catch (IOException e){
         }
@@ -64,7 +92,7 @@ public class Repl {
         return null;
     }
     
-    final String eval(String cmd){
+    final CommandResult eval(String cmd){
         if (cmd == null)
             return null;
         
@@ -73,6 +101,7 @@ public class Repl {
         if (tokens.isEmpty()){
             return null;
         }
+        
         String commandName = tokens.remove(0);
         Command c = commands.get(commandName);
         
@@ -88,7 +117,6 @@ public class Repl {
         
     }
     
-    
     final void loop(){
         
         while(true){
@@ -98,62 +126,14 @@ public class Repl {
                 break; // eof
             }
             
-            String result = eval(input);
-            if (result != null){
+            CommandResult result = eval(input);
+            if (result != null && result.getOutput() != null){
                 out.println(result);
-            }
-            
+                if (result.failed()){
+                    System.exit(result.getResultCode());
+                }
+            }    
         } 
     }
-    
-    // Built in commands 
-    
-    private class Help implements Command {
-    
-        public String getName(){
-            return "help";
-        }
-        
-        public String execute(List<String> args){
-            
-            if (args == null || args.isEmpty()){
-                StringBuilder sb = new StringBuilder();
-                for (String cmd : commands.keySet()){
-                    sb.append(commands.get(cmd).usage());
-                    sb.append("\n");
-                }
-                return sb.toString();
-            }
-            Command c = commands.get(args.get(0));
-            if (c != null){
-                return c.usage();
-            }
-            return "unknown command: " + args.get(0);
-        }
-        
-        public String usage(){
-            return TUI.formatUsage(getName(), 
-                    "displays help for each command", 
-                    "[<command>]");      
-        }
-
-    }
-    
-    private class Exit implements Command {
-        
-        public String getName(){
-            return "exit";
-        }
-        
-        public String execute(List<String> args){
-            System.exit(0);
-            return null;
-        }
-        
-        public String usage(){
-            return TUI.formatUsage(getName(), "quit this program", "");
-        }
-        
-    }
-    
+  
 }

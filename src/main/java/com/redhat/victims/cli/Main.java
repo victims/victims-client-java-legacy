@@ -1,5 +1,9 @@
 package com.redhat.victims.cli;
 
+import com.redhat.victims.cli.commands.LastUpdateCommand;
+import com.redhat.victims.cli.commands.ConfigureCommand;
+import com.redhat.victims.cli.commands.ScanCommand;
+import com.redhat.victims.cli.commands.SynchronizeCommand;
 
 /**
  *

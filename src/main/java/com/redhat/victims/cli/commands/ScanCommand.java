@@ -1,5 +1,5 @@
 
-package com.redhat.victims.cli;
+package com.redhat.victims.cli.commands;
 
 import com.redhat.victims.VictimsException;
 import com.redhat.victims.VictimsRecord;
@@ -17,22 +17,31 @@ import java.util.List;
  */
 public class ScanCommand implements Command {
 
+    private Usage help;
+    
+    public ScanCommand(){
+      help = new Usage(getName(), "scans the supplied .jar file and reports any vulnerabilities");
+      help.addExample("path/to/file.jar");
+      help.addExample("/directory/full/of/jars");
+    }
+  
     @Override
-    public String getName() {
+    public final String getName() {
         return "scan";
     }
 
     @Override
-    public String execute(List<String> args) {
+    public CommandResult execute(List<String> args) {
+      
         if (args == null){
-            return "file or directory expected";
+            return new ExitFailure("file or directory expected");
         }
         
         VictimsDBInterface db; 
         try {
            db = VictimsDB.db();
         } catch (VictimsException e){
-            return String.format("error: %s", e.getMessage());
+            return new ExitFailure(e.getMessage());
         }
                 
         StringBuilder sb = new StringBuilder(); 
@@ -52,23 +61,25 @@ public class ScanCommand implements Command {
                             }
                         }
                     } catch(VictimsException e){
+                      e.printStackTrace(System.err);
+                      return new ExitFailure(e.getMessage());
                     }
                 }
             } catch (IOException e){
-                sb.append(String.format("error: %s%n", e.getMessage()));
+                e.printStackTrace(System.err);
+                return new ExitFailure(e.getMessage());
             }
         }
         if (sb.length() > 0){
-            return sb.toString();
+          return new ExitSuccess(sb.toString());
         } 
-        return TUI.SUCCESS;
+        
+        return new ExitSuccess("no vulnerabilities detected");
     }
 
     @Override
     public String usage() {
-        return TUI.formatUsage(getName(), 
-                "scans the supplied .jar file and reports any vulnerabilities", 
-                "path/to/file.jar");
+      return help.toString();
     }
     
 }

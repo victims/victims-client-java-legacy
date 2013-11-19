@@ -1,4 +1,4 @@
-package com.redhat.victims.cli;
+package com.redhat.victims.cli.commands;
 
 import com.redhat.victims.VictimsException;
 import com.redhat.victims.database.VictimsDB;
@@ -10,27 +10,33 @@ import java.util.List;
  */
 public class SynchronizeCommand implements Command {
 
+    private Usage help;
+    
+    public SynchronizeCommand(){
+      help = new Usage(getName(), "update the victims database definitions");
+      help.addExample("");
+    }
+    
     @Override
-    public String getName() {
+    public final String getName() {
         return "sync";
     }
 
     @Override
-    public String execute(List<String> args) {
+    public CommandResult execute(List<String> args) {
         try { 
             VictimsDBInterface db = VictimsDB.db();
             db.synchronize();
-            return TUI.SUCCESS;
+            return new ExitSuccess("syncrhonization completed successfully");
                     
         } catch (VictimsException e){
-            return String.format("error: %s", e.getMessage());
+            return new ExitFailure(e.getMessage());
         }
-        
     }
 
     @Override
     public String usage() {
-        return TUI.formatUsage(getName(), "update the victims database definitions", "");
+        return help.toString();
     }
     
 }
