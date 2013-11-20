@@ -84,7 +84,8 @@ checkenv(){
 
 
 last_updated(){
-    last_update="$(${VICTIMS_CMD} last-update)"
+
+    last_update="$(runner 'last-update' | sed -e 's/>//')"
     echo "Vulnerability definitions last updated: ${last_update}."
 }
 
