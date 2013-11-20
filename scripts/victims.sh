@@ -1,6 +1,21 @@
 #!/bin/bash
-###############################################################################
-# Convenience Wrapper for the victims cli 
+#
+# This file is part of victims-client.
+# Copyright (C) 2013 The Victims Project
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU Affero General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# 
 ###############################################################################
 
 # victims client configuration. 
@@ -113,7 +128,12 @@ Usage:
                 it matches a definition in the victims vulnerability
                 database.
 
+    -p          Scan dependencies listed in a pom.xml file.
+
     -i          Interactive mode.
+
+    -f          Run a victims script
+
 
 Examples:
 
@@ -144,7 +164,7 @@ main(){
     checkenv
     last_updated
 
-    while getopts ":hus:i" opt; do
+    while getopts ":hus:if:" opt; do
         case $opt in
             h)
                 usage
@@ -167,6 +187,14 @@ main(){
 
             i)  echo "Entering interactive mode" 
                 ${VICTIMS_CMD}
+                ;;
+
+            p)  echo "Scanning pom file $OPTARG"
+                runner "scan-pom" "$OPTARG"
+                ;;
+
+            f)  echo "Running victims script"
+                ${VICTIMS_CMD} < ${OPTARG}
                 ;;
 
             s)

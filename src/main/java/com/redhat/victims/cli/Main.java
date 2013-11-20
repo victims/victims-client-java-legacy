@@ -25,6 +25,7 @@ import com.redhat.victims.cli.commands.LastUpdateCommand;
 import com.redhat.victims.cli.commands.ConfigureCommand;
 import com.redhat.victims.cli.commands.ScanCommand;
 import com.redhat.victims.cli.commands.SynchronizeCommand;
+import com.redhat.victims.cli.commands.PomScannerCommand;
 
 /**
  *
@@ -38,6 +39,7 @@ public class Main {
         repl.register(new LastUpdateCommand());
         repl.register(new SynchronizeCommand());
         repl.register(new ScanCommand());
+        repl.register(new PomScannerCommand());
         
         if (args.length > 0){
             StringBuilder sb = new StringBuilder();

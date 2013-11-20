@@ -111,11 +111,10 @@ Scripting victims tasks
 #### Using the victims wrapper script
 
 An example shell script that wraps the victims .jar file is located in 
-src/resources/victims.  
+scripts/victims.sh  
     
 ```
-$ src/resources/victims
-Vulnerability definitions last updated: Tue Nov 19 15:33:33 EST 2013.
+$ scripts/victims.sh
 
 victims - Check jar files against a database of known vulnerable 
           artifacts. 
@@ -130,7 +129,12 @@ Usage:
                 it matches a definition in the victims vulnerability
                 database.
 
+    -p          Scan dependencies listed in a pom.xml file.
+
     -i          Interactive mode.
+
+    -f          Run a victims script
+
 
 Examples:
 
@@ -139,6 +143,8 @@ Examples:
 
   To scan a jar file for vulnerabilities: 
     victims -s example.jar 
+
+
 ```
 
 #### Overwriting configuration settings. 
