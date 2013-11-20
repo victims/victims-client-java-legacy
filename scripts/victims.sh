@@ -27,9 +27,9 @@ VICTIMS_HOME=${VICTIMS_HOME:-"${HOME}/.victims"}
 VICTIMS_CACHE_PURGE=${VICTIMS_CACHE_PURGE:-"false"}
 VICTIMS_ALGORITHMS=${VICTIMS_ALGORITHMS:-"MD5,SHA1,SHA512"}
 VICTIMS_DB_DRIVER=${VICTIMS_DB_DRIVER:-"org.h2.Driver"}
-#VICTIMS_DB_URL=${VICTIMS_DB_URL:-"jdbc:${VICTIMS_HOME}/victims;MVCC=true"}
-#VICTIMS_DB_USER=${VICTIMS_DB_USER:-"victims"}
-#VICTIMS_DB_PASS=${VICTIMS_DB_PASS:-"victims"}
+VICTIMS_DB_URL=${VICTIMS_DB_URL:-"jdbc:h2:${VICTIMS_HOME}/victims;MVCC=true"}
+VICTIMS_DB_USER=${VICTIMS_DB_USER:-"victims"}
+VICTIMS_DB_PASS=${VICTIMS_DB_PASS:-"victims"}
 VICTIMS_DB_PURGE=${VICTIMS_DB_PURGE:-"false"}
 
 # victims client version 
@@ -54,10 +54,10 @@ debug_env(){
     echo "VICTIMS_HOME = ${VICTIMS_HOME}"
     echo "VICTIMS_CACHE_PURGE = ${VICTIMS_CACHE_PURGE}"
     echo "VICTIMS_ALGORITHMS = ${VICTIMS_ALGORITHMS}"
-#    echo "VICTIMS_DB_DRIVER = ${VICTIMS_DB_DRIVER}"
-#    echo "VICTIMS_DB_URL = ${VICTIMS_DB_URL}"
-#    echo "VICTIMS_DB_USER = ${VICTIMS_DB_USER}"
-#    echo "VICTIMS_DB_PASS = ${VICTIMS_DB_PASS}"
+    echo "VICTIMS_DB_DRIVER = ${VICTIMS_DB_DRIVER}"
+    echo "VICTIMS_DB_URL = ${VICTIMS_DB_URL}"
+    echo "VICTIMS_DB_USER = ${VICTIMS_DB_USER}"
+    echo "VICTIMS_DB_PASS = ${VICTIMS_DB_PASS}"
     echo "VICTIMS_DB_PURGE = ${VICTIMS_DB_PURGE}"
 }
 
@@ -91,12 +91,6 @@ last_updated(){
 
 runner(){
 
-# TODO: Database configuration settings = broken..
-#config set victims.db.driver "${VICTIMS_DB_DRIVER}"
-#config set victims.db.url "${VICTIMS_DB_URL}"
-#config set victims.db.user "${VICTIMS_DB_USER}"
-#config set victims.db.pass "${VICTIMS_DB_PASS}"
-
     ${VICTIMS_CMD} <<EOF
 quiet
 config set victims.service.uri "${VICTIMS_SERVICE_URI}"
@@ -105,6 +99,12 @@ config set victims.encoding "${VICTIMS_ENCODING}"
 config set victims.home "${VICTIMS_HOME}"
 config set victims.cache.purge "${VICTIMS_CACHE_PURGE}"
 config set victims.algorithms "${VICTIMS_ALGORITHMS}"
+config set victims.db.driver "${VICTIMS_DB_DRIVER}"
+config set victims.db.url "${VICTIMS_DB_URL}"
+config set victims.db.user "${VICTIMS_DB_USER}"
+config set victims.db.pass "${VICTIMS_DB_PASS}"
+
+
 config set victims.db.purge "${VICTIMS_DB_PURGE}"
 $@
 EOF
