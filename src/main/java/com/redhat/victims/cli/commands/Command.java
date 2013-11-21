@@ -23,13 +23,17 @@ package com.redhat.victims.cli.commands;
 
 
 import java.util.List;
+import com.redhat.victims.cli.results.CommandResult;
+import java.util.concurrent.Callable;
 
 /**
  *
  * @author gm
  */
-public interface Command {
+public interface Command extends Callable<CommandResult>{
     public String getName();
-    public CommandResult execute(List<String> args);    
+    public void setArguments(List<String> args);
+    public CommandResult execute(List<String> args);
     public String usage();
+    public Command newInstance();
 }

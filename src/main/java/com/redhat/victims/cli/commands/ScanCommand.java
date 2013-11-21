@@ -24,13 +24,25 @@ package com.redhat.victims.cli.commands;
 
 import com.redhat.victims.VictimsException;
 import com.redhat.victims.VictimsRecord;
+import com.redhat.victims.VictimsResultCache;
 import com.redhat.victims.VictimsScanner;
+import com.redhat.victims.cli.results.CommandResult;
+import com.redhat.victims.cli.results.ExitFailure;
+import com.redhat.victims.cli.results.ExitInvalid;
 import com.redhat.victims.database.VictimsDB;
 import com.redhat.victims.database.VictimsDBInterface;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+
 
 /**
  *
@@ -39,7 +51,8 @@ import java.util.List;
 public class ScanCommand implements Command {
 
     private Usage help;
-    
+    private List<String> arguments; 
+ 
     public ScanCommand(){
       help = new Usage(getName(), "scans the supplied .jar file and reports any vulnerabilities");
       help.addExample("path/to/file.jar");
@@ -50,57 +63,118 @@ public class ScanCommand implements Command {
     public final String getName() {
         return "scan";
     }
+    
+    public String checksum(String filename){
+        String hash = null;
+        try { 
+            MessageDigest md = MessageDigest.getInstance("SHA1");
+            InputStream is = new FileInputStream(new File(filename));
+            byte[] buffer = new byte[1024];
+            while (is.read(buffer) > 0){
+                md.update(buffer);
+            }
+            
+            byte[] digest = md.digest();
+            hash = String.format("%0" + (digest.length << 1) + "X", new BigInteger(1, digest));
+           
+        } catch (NoSuchAlgorithmException e) {
+        } catch (FileNotFoundException e){         
+        } catch (IOException e){
+        }
+        
+        return hash;
+       
+    }
 
     @Override
     public CommandResult execute(List<String> args) {
       
         if (args == null){
-            return new ExitFailure("file or directory expected");
+            return new ExitInvalid("file or directory expected");
         }
         
         VictimsDBInterface db; 
+        VictimsResultCache cache;
+      
         try {
            db = VictimsDB.db();
+           cache = new VictimsResultCache();
+
         } catch (VictimsException e){
             return new ExitFailure(e.getMessage());
         }
                 
-        StringBuilder sb = new StringBuilder(); 
+        CommandResult result = new CommandResult();
         for (String arg : args){
+            
+            // Check cache 
+            String key = checksum(arg);
+            if (key != null && cache.exists(key)) {
+                try {
+                    HashSet<String> cves = cache.get(key);
+                    if (cves != null && cves.size() > 0) {
+                        result.addOutput(String.format("%s VULNERABLE! ", arg));
+                        for (String cve : cves) {
+                            result.addOutput(cve);
+                            result.addOutput(" ");
+                        }
+                        continue;
+                    }
+                } catch (VictimsException e) {
+                    result.addVerboseOutput(e.getMessage());
+                }
+            }
+            
+            // Scan the item
             ArrayList<VictimsRecord> records = new ArrayList();
             try {
+             
                 VictimsScanner.scan(arg, records);
                 for (VictimsRecord record : records){
                     
                     try{ 
                         HashSet<String> cves = db.getVulnerabilities(record);
+                        if (key != null)
+                            cache.add(key, cves);
                         if (! cves.isEmpty()){
-                            sb.append(String.format("%s VULNERABLE! ", arg));
+                            result.addOutput(String.format("%s VULNERABLE! ", arg));
                             for (String cve : cves){
-                                sb.append(cve);
-                                sb.append(" ");
+                                result.addOutput(cve);
+                                result.addOutput(" ");
                             }
                         }
+                        
                     } catch(VictimsException e){
-                      e.printStackTrace(System.err);
-                      return new ExitFailure(e.getMessage());
+                        e.printStackTrace();
+                        return new ExitFailure(e.getMessage());
                     }
                 }
             } catch (IOException e){
-                e.printStackTrace(System.err);
+                e.printStackTrace();
                 return new ExitFailure(e.getMessage());
             }
         }
-        if (sb.length() > 0){
-          return new ExitSuccess(sb.toString());
-        } 
-        
-        return new ExitSuccess("no vulnerabilities detected");
+        return result;
     }
 
     @Override
     public String usage() {
       return help.toString();
+    }
+    
+    @Override
+    public void setArguments(List<String> args) {
+        this.arguments = args;
+    }
+
+    @Override
+    public CommandResult call() throws Exception {
+        return execute(this.arguments);
+    }
+    
+    @Override
+    public Command newInstance(){
+        return new ScanCommand();
     }
     
 }

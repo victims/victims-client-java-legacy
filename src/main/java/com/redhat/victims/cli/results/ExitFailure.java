@@ -1,5 +1,5 @@
 
-package com.redhat.victims.cli.commands;
+package com.redhat.victims.cli.results;
 
 /*
  * #%L
@@ -28,7 +28,7 @@ package com.redhat.victims.cli.commands;
  */
 public class ExitFailure extends CommandResult {
     public ExitFailure(String error){
-        super(-1, String.format("error: %s", error));
+        super(CommandResult.RESULT_ERROR, String.format("error: %s", error));
     }
   
 }

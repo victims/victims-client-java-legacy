@@ -26,6 +26,7 @@ package com.redhat.victims.cli.commands;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import com.redhat.victims.cli.results.*;
 
 /**
  *
@@ -52,6 +53,7 @@ public class ConfigureCommand implements Command {
     };
     
     private Usage help;
+    private List<String> arguments; 
     
     public ConfigureCommand(){
      
@@ -68,14 +70,15 @@ public class ConfigureCommand implements Command {
     
     private CommandResult list(){
       
-      StringBuilder sb = new StringBuilder();
+      CommandResult result = new CommandResult();
       for (String setting : settings) {
-        sb.append(setting);
-        sb.append(" = ");
-        sb.append(System.getProperty(setting));
-        sb.append(String.format("%n"));
+        result.addOutput(setting);
+        result.addOutput(" = ");
+        result.addOutput(System.getProperty(setting));
+        result.addOutput(String.format("%n"));
       }
-      return new ExitSuccess(sb.toString());
+      result.setResultCode(CommandResult.RESULT_SUCCESS);
+      return result;
     }
     
     private CommandResult get(List<String> args){
@@ -88,18 +91,25 @@ public class ConfigureCommand implements Command {
         return new ExitSuccess(val);
 
       } else {
-        return new ExitFailure("invalid setting");
+        return new ExitInvalid("invalid setting");
       }
     }
     
     public CommandResult set(List<String> args){
       
       if (args.size() == 3 && settings.contains(args.get(1))) {
-        System.setProperty(args.get(1), args.get(2));
-        return new ExitSuccess(null);
+        String old = System.setProperty(args.get(1), args.get(2));
+        ExitSuccess result = new ExitSuccess(null);
+        result.addVerboseOutput(args.get(1));
+        result.addVerboseOutput(" ");
+        result.addVerboseOutput(old); 
+        result.addVerboseOutput(" => ");
+        result.addVerboseOutput(args.get(2));
+
+        return result;
 
       } else {
-        return new ExitFailure("invalid setting");
+        return new ExitInvalid("invalid setting");
       }
     }
 
@@ -122,12 +132,28 @@ public class ConfigureCommand implements Command {
             return set(args);
             
         } else {
-            return new ExitFailure("get, set, or list expected");
+            return new ExitInvalid("get, set, or list expected");
         }      
     }
 
     @Override
     public String usage() {
         return help.toString();
+    }
+
+    @Override
+    public void setArguments(List<String> args) {
+        this.arguments = args;
+    }
+
+    @Override
+    public CommandResult call() throws Exception {
+        return execute(this.arguments);
+    }
+    
+    @Override
+    public Command newInstance(){ 
+        ConfigureCommand cmd = new ConfigureCommand();
+        return new ConfigureCommand();
     }
 }

@@ -21,11 +21,15 @@ package com.redhat.victims.cli;
  * #L%
  */
 
+import com.redhat.victims.cli.commands.Command;
 import com.redhat.victims.cli.commands.LastUpdateCommand;
 import com.redhat.victims.cli.commands.ConfigureCommand;
 import com.redhat.victims.cli.commands.ScanCommand;
 import com.redhat.victims.cli.commands.SynchronizeCommand;
 import com.redhat.victims.cli.commands.PomScannerCommand;
+import com.redhat.victims.cli.results.CommandResult;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -42,15 +46,27 @@ public class Main {
         repl.register(new PomScannerCommand());
         
         if (args.length > 0){
+            
             StringBuilder sb = new StringBuilder();
             for (String arg : args){
                 sb.append(arg);
                 sb.append(" ");
             }
-            System.out.println(repl.eval(sb.toString()));
-   
+            Command cmd = repl.eval(sb.toString());
+            try {
+                CommandResult res = cmd.call();
+                if (res != null)
+                    repl.print(res);
+                                
+                repl.shutdown(true);
+
+            } catch (Exception e) {
+                System.out.println(e);
+                          
+            }
+              
         } else {
-            repl.loop();
+            System.exit(repl.loop());
         }
         
     }

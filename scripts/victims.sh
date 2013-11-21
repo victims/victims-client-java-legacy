@@ -42,7 +42,7 @@ VICTIMS_JAR="victims-client-${VICTIMS_CLIENT_VERSION}-standalone.jar"
 VICTIMS_CLIENT="${VICTIMS_HOME}/${VICTIMS_JAR}"
 
 # base command
-VICTIMS_CMD="java -jar ${VICTIMS_CLIENT}"
+VICTIMS_CMD="java -Dvictims.cli.repl=false -Dvictims.cli.verbose=true  -jar ${VICTIMS_CLIENT}"
 
 debug_env(){
     echo "VICTIMS_CLIENT_VERSION = ${VICTIMS_CLIENT_VERSION}"
@@ -92,7 +92,6 @@ last_updated(){
 runner(){
 
     ${VICTIMS_CMD} <<EOF
-quiet
 config set victims.service.uri "${VICTIMS_SERVICE_URI}"
 config set victims.service.entry "${VICTIMS_SERVICE_ENTRY}"
 config set victims.encoding "${VICTIMS_ENCODING}"
@@ -103,8 +102,6 @@ config set victims.db.driver "${VICTIMS_DB_DRIVER}"
 config set victims.db.url "${VICTIMS_DB_URL}"
 config set victims.db.user "${VICTIMS_DB_USER}"
 config set victims.db.pass "${VICTIMS_DB_PASS}"
-
-
 config set victims.db.purge "${VICTIMS_DB_PURGE}"
 $@
 EOF

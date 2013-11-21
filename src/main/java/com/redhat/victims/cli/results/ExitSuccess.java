@@ -1,5 +1,5 @@
 
-package com.redhat.victims.cli.commands;
+package com.redhat.victims.cli.results;
 
 /*
  * #%L
@@ -29,7 +29,7 @@ package com.redhat.victims.cli.commands;
 public class ExitSuccess extends CommandResult {
 
     public ExitSuccess(String output){
-      super(0, output);
+      super(CommandResult.RESULT_SUCCESS, output);
     }
  
 }

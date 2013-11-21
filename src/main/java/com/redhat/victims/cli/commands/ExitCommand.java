@@ -24,7 +24,8 @@ package com.redhat.victims.cli.commands;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * #L%
  */
-
+import com.redhat.victims.cli.results.CommandResult;
+import com.redhat.victims.cli.results.ExitTerminate;
 import java.util.List;
 
 /**
@@ -33,25 +34,41 @@ import java.util.List;
  */
 public class ExitCommand implements Command {
 
-  private Usage help;
-  
-  public ExitCommand(){
-    help = new Usage(getName(), "exit from interactive mode");
-  }
-  
-  @Override
-  public final String getName() {
-    return "exit";
-  }
+    private Usage help;
+    private List<String> arguments;
 
-  @Override
-  public CommandResult execute(List<String> args) {
-    System.exit(0);
-    return null; // not reachable
-  }
+    public ExitCommand() {
+        help = new Usage(getName(), "exit from interactive mode");
+    }
 
-  @Override
-  public String usage() {
-    return help.toString();
-  }
+    @Override
+    public final String getName() {
+        return "exit";
+    }
+
+    @Override
+    public CommandResult execute(List<String> args) {
+        return new ExitTerminate(CommandResult.RESULT_SUCCESS);
+    }
+
+    @Override
+    public String usage() {
+        return help.toString();
+    }
+
+    @Override
+    public void setArguments(List<String> args) {
+        this.arguments = args;
+    }
+
+    @Override
+    public CommandResult call() throws Exception {
+        return execute(this.arguments);
+    }
+    
+    @Override
+    public Command newInstance(){
+        return new ExitCommand();
+    }
+
 }

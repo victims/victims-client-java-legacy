@@ -34,10 +34,16 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.redhat.victims.cli.commands.Command;
-import com.redhat.victims.cli.commands.CommandResult;
+import com.redhat.victims.cli.commands.MapCommand;
+import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.commands.HelpCommand;
 import com.redhat.victims.cli.commands.ExitCommand;
-import com.redhat.victims.cli.commands.QuietCommand;
+import com.redhat.victims.cli.results.ExitTerminate;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  *
@@ -45,21 +51,39 @@ import com.redhat.victims.cli.commands.QuietCommand;
  */
 public class Repl {
     
+    public static final String INTERACTIVE = "victims.cli.repl";
+    public static final String VERBOSE = "victims.cli.verbose";
    
     private String prompt; 
     private BufferedReader in;
     private PrintStream out;
     private Map<String, Command> commands;
-    private Map<String, Boolean> flags;
+    private boolean verbose;
+    private boolean interactive;
+       
+    private ExecutorService executor;
+    private ExecutorCompletionService<CommandResult> completor;
+    private List<Future<CommandResult>> completed;
     
     Repl(InputStream input, PrintStream output, String prompt){
         this.in = new BufferedReader(new InputStreamReader(input));
         this.out = output;
         this.prompt = prompt;
         this.commands = new HashMap();  
-        this.flags = new HashMap();
+        
+        String v = System.getProperty(VERBOSE);
+        this.verbose = (v != null && v.equals("true"));
+
+        String i = System.getProperty(INTERACTIVE); 
+        this.interactive =  (i != null && i.equals("true"));
+        
+        int cores = Runtime.getRuntime().availableProcessors();
+        executor = Executors.newFixedThreadPool(cores);
+        completor = new ExecutorCompletionService(executor);
+        completed = new ArrayList();
+        
+        register(new MapCommand(this.commands, completor, completed));
         register(new HelpCommand(this.commands));
-        register(new QuietCommand(this.flags));
         register(new ExitCommand());
     }
     
@@ -71,8 +95,23 @@ public class Repl {
     final void register(Command cmd){  
         commands.put(cmd.getName(), cmd);
     }
+    
+    public void shutdown(boolean wait) throws InterruptedException, ExecutionException{
+        try{ 
+            for (Future<CommandResult> task : completed){
+                if (wait)
+                    print(task.get());
+                task.cancel(true);
+            }
+        } finally { 
+        
+            if (executor != null){
+                executor.shutdown();
+            }
+        }
+    }
       
-    final private static String unquote(String s){
+    private static String unquote(String s){
         if (s.isEmpty()){
             return s;
         }
@@ -89,7 +128,7 @@ public class Repl {
        
     }
     
-    final private static List<String> parse(String cmd) {
+    private static List<String> parse(String cmd) {
         
         List<String> tokens = new ArrayList<String>();
         Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
@@ -99,21 +138,21 @@ public class Repl {
         }
         return tokens;
     }
-    
+        
     final String read(){
         try {
-            Boolean quietMode = flags.get("quiet");
-            if (quietMode == null || ! quietMode.booleanValue())
-              out.printf("%s ", prompt);
-            
+            if (interactive){
+                out.printf("%s ", prompt);
+            }           
             return in.readLine();
+        
         } catch (IOException e){
         }
         
         return null;
     }
     
-    final CommandResult eval(String cmd){
+    final Command eval(String cmd){
         if (cmd == null)
             return null;
         
@@ -132,29 +171,100 @@ public class Repl {
         }
         
         if (tokens.isEmpty()){
-            return c.execute(null);
-        } 
-        return c.execute(tokens);
+            c.setArguments(null);
+        } else { 
+            c.setArguments(tokens);
+        }
+        
+        return c;
         
     }
     
-    final void loop(){
+    final void print(CommandResult r){
         
-        while(true){
-            String input = read();
-            if (input == null){
-                out.println();
-                break; // eof
-            }
-            
-            CommandResult result = eval(input);
-            if (result != null && result.getOutput() != null){
-                out.println(result);
-                if (result.failed()){
-                    System.exit(result.getResultCode());
-                }
-            }    
+        if (r == null || r.getOutput() == null || r.getOutput().isEmpty()){
+            return;
         } 
+        
+        if (verbose && r.getVerboseOutput() != null){
+            out.println(r.getVerboseOutput());
+            
+        } else  {
+            out.println(r.getOutput());
+        }
+        
+    }
+    
+    final int loop() {
+        
+        int rc = 0;
+      
+        try {
+            
+            
+            while (true) {
+            
+                String input = null; 
+                boolean didRead = false;
+
+                if (in.ready() || completed.isEmpty()){
+                    input = read();
+                    didRead = true;
+                } 
+               
+                if (input == null && didRead) {
+                    shutdown(true);
+     
+                    if (interactive)
+                        out.println();
+                    
+                    break; // eof
+                } 
+
+                // submit async job
+                if (input != null){
+                    Command callable = eval(input);
+                    if (callable != null){
+                        completed.add(completor.submit(callable));
+                    }
+                }
+                
+                // process completed jobs 
+                Future<CommandResult> result;
+                while ((result = completor.poll()) != null){
+                    CommandResult r = result.get();    
+                    completed.remove(result);
+
+                    if (r != null){
+                       
+                       print(r);
+                        
+                        // bail
+                        if (r.failed() || r instanceof ExitTerminate){
+                            shutdown(false);
+                            return r.getResultCode();
+                        }
+                    } 
+                }
+            }
+        } catch(IOException e){
+            e.printStackTrace();
+            out.printf("error: %s%n", e.getMessage());
+            rc = CommandResult.RESULT_ERROR;
+        } catch(InterruptedException e){
+                        e.printStackTrace();
+
+            out.printf("error: %s%n", e.getMessage());
+            rc = CommandResult.RESULT_ERROR;
+        } catch(ExecutionException e){
+                        e.printStackTrace();
+
+            out.printf("error: %s%n", e.getMessage());
+            rc = CommandResult.RESULT_ERROR;
+
+        }
+        
+        return rc;
     }
   
 }

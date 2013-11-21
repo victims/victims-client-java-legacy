@@ -23,6 +23,9 @@ package com.redhat.victims.cli.commands;
  */
 
 
+import com.redhat.victims.cli.results.CommandResult;
+import com.redhat.victims.cli.results.ExitInvalid;
+import com.redhat.victims.cli.results.ExitSuccess;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +37,8 @@ public class HelpCommand implements Command {
 
   private final Map<String, Command> commands;
   private Usage help;
+  private List<String> arguments; 
+
 
   public HelpCommand(final Map<String, Command> commands) {
     this.commands = commands;
@@ -52,22 +57,39 @@ public class HelpCommand implements Command {
   public CommandResult execute(List<String> args) {
 
     if (args == null || args.isEmpty()) {
-      StringBuilder sb = new StringBuilder();
+      ExitSuccess result = new ExitSuccess(null);
       for (String cmd : commands.keySet()) {
-        sb.append(commands.get(cmd).usage());
-        sb.append("\n");
+        result.addOutput(commands.get(cmd).usage());
+        result.addOutput(String.format("%n"));
       }
-      return new ExitSuccess(sb.toString());
+      return result;
     }
+    
     Command c = commands.get(args.get(0));
     if (c != null) {
       return new ExitSuccess(c.usage());
     }
-    return new ExitFailure("unknown command: " + args.get(0));
+    return new ExitInvalid("unknown command: " + args.get(0));
   }
 
   @Override
   public String usage() {
     return help.toString();
   }
+  
+  @Override
+    public void setArguments(List<String> args) {
+        this.arguments = args;
+    }
+
+    @Override
+    public CommandResult call() throws Exception {
+        return execute(this.arguments);
+    }
+    
+    @Override
+    public Command newInstance(){
+        return new HelpCommand(this.commands);
+    }
+    
 }
