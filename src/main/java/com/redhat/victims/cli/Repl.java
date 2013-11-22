@@ -20,8 +20,6 @@ package com.redhat.victims.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * #L%
  */
-
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,86 +48,86 @@ import java.util.concurrent.Future;
  * @author gm
  */
 public class Repl {
-    
+
     public static final String INTERACTIVE = "victims.cli.repl";
     public static final String VERBOSE = "victims.cli.verbose";
-   
-    private String prompt; 
+
+    private String prompt;
     private BufferedReader in;
     private PrintStream out;
     private Map<String, Command> commands;
     private boolean verbose;
     private boolean interactive;
-       
+
     private ExecutorService executor;
     private ExecutorCompletionService<CommandResult> completor;
     private List<Future<CommandResult>> completed;
-    
-    Repl(InputStream input, PrintStream output, String prompt){
+
+    Repl(InputStream input, PrintStream output, String prompt) {
         this.in = new BufferedReader(new InputStreamReader(input));
         this.out = output;
         this.prompt = prompt;
-        this.commands = new HashMap();  
-        
+        this.commands = new HashMap();
+
         String v = System.getProperty(VERBOSE);
         this.verbose = (v != null && v.equals("true"));
 
-        String i = System.getProperty(INTERACTIVE); 
-        this.interactive =  (i != null && i.equals("true"));
-        
+        String i = System.getProperty(INTERACTIVE);
+        this.interactive = (i != null && i.equals("true"));
+
         int cores = Runtime.getRuntime().availableProcessors();
         executor = Executors.newFixedThreadPool(cores);
         completor = new ExecutorCompletionService(executor);
         completed = new ArrayList();
-        
+
         register(new MapCommand(this.commands, completor, completed));
         register(new HelpCommand(this.commands));
         register(new ExitCommand());
     }
-    
-    Repl(){
+
+    Repl() {
         this(System.in, System.out, ">");
     }
-    
 
-    final void register(Command cmd){  
+    final void register(Command cmd) {
         commands.put(cmd.getName(), cmd);
     }
-    
-    public void shutdown(boolean wait) throws InterruptedException, ExecutionException{
-        try{ 
-            for (Future<CommandResult> task : completed){
-                if (wait)
+
+    public void shutdown(boolean wait) throws InterruptedException, ExecutionException {
+        try {
+            for (Future<CommandResult> task : completed) {
+                if (wait) {
                     print(task.get());
+                }
                 task.cancel(true);
             }
-        } finally { 
-        
-            if (executor != null){
+        } finally {
+
+            if (executor != null) {
                 executor.shutdown();
             }
         }
     }
-      
-    private static String unquote(String s){
-        if (s.isEmpty()){
+
+    private static String unquote(String s) {
+        if (s.isEmpty()) {
             return s;
         }
-        int start = 0; 
+        int start = 0;
         int end = s.length();
-        if (s.startsWith("\'") || s.startsWith("\"")){
+        if (s.startsWith("\'") || s.startsWith("\"")) {
             start++;
         }
-        if (s.endsWith("\'") || s.endsWith("\"")){
+        if (s.endsWith("\'") || s.endsWith("\"")) {
             end--;
         }
-     
+
         return s.substring(start, end);
-       
+
     }
-    
+
     private static List<String> parse(String cmd) {
-        
+
         List<String> tokens = new ArrayList<String>();
         Pattern regex = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
         Matcher regexMatcher = regex.matcher(cmd);
@@ -138,133 +136,135 @@ public class Repl {
         }
         return tokens;
     }
-        
-    final String read(){
+
+    final String read() {
         try {
-            if (interactive){
+            if (interactive) {
                 out.printf("%s ", prompt);
-            }           
+            }
             return in.readLine();
-        
-        } catch (IOException e){
+
+        } catch (IOException e) {
         }
-        
+
         return null;
     }
-    
-    final Command eval(String cmd){
-        if (cmd == null)
-            return null;
-        
-        List<String> tokens = parse(cmd);
-       
-        if (tokens.isEmpty()){
+
+    final Command eval(String cmd) {
+        if (cmd == null) {
             return null;
         }
-        
+
+        List<String> tokens = parse(cmd);
+
+        if (tokens.isEmpty()) {
+            return null;
+        }
+
         String commandName = tokens.remove(0);
         Command c = commands.get(commandName);
-        
-        if (c == null){
+
+        if (c == null) {
             out.printf("invalid command: %s%n", commandName);
             return null;
         }
-        
-        if (tokens.isEmpty()){
+        c = c.newInstance();
+
+        if (tokens.isEmpty()) {
             c.setArguments(null);
-        } else { 
+        } else {
             c.setArguments(tokens);
         }
-        
+
         return c;
-        
+
     }
-    
-    final void print(CommandResult r){
-        
-        if (r == null || r.getOutput() == null || r.getOutput().isEmpty()){
+
+    final void print(CommandResult r) {
+
+        if (r == null || r.getOutput() == null || r.getOutput().isEmpty()) {
             return;
-        } 
-        
-        if (verbose && r.getVerboseOutput() != null){
+        }
+
+        if (verbose && r.getVerboseOutput() != null) {
             out.println(r.getVerboseOutput());
-            
-        } else  {
+
+        } else {
             out.println(r.getOutput());
         }
-        
+
     }
-    
+
     final int loop() {
-        
+
         int rc = 0;
-      
+
         try {
-            
-            
+
             while (true) {
-            
-                String input = null; 
+
+                String input = null;
                 boolean didRead = false;
 
-                if (in.ready() || completed.isEmpty()){
+                if (in.ready() || completed.isEmpty()) {
                     input = read();
                     didRead = true;
-                } 
-               
+                }
+
                 if (input == null && didRead) {
                     shutdown(true);
-     
-                    if (interactive)
+
+                    if (interactive) {
                         out.println();
-                    
+                    }
+
                     break; // eof
-                } 
+                }
 
                 // submit async job
-                if (input != null){
+                if (input != null) {
                     Command callable = eval(input);
-                    if (callable != null){
+                    if (callable != null) {
                         completed.add(completor.submit(callable));
                     }
                 }
-                
+
                 // process completed jobs 
                 Future<CommandResult> result;
-                while ((result = completor.poll()) != null){
-                    CommandResult r = result.get();    
+                while ((result = completor.poll()) != null) {
+                    CommandResult r = result.get();
                     completed.remove(result);
 
-                    if (r != null){
-                       
-                       print(r);
-                        
+                    if (r != null) {
+
+                        print(r);
+
                         // bail
-                        if (r.failed() || r instanceof ExitTerminate){
+                        if (r.failed() || r instanceof ExitTerminate) {
                             shutdown(false);
                             return r.getResultCode();
                         }
-                    } 
+                    }
                 }
             }
-        } catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             out.printf("error: %s%n", e.getMessage());
             rc = CommandResult.RESULT_ERROR;
-        } catch(InterruptedException e){
-                        e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
 
             out.printf("error: %s%n", e.getMessage());
             rc = CommandResult.RESULT_ERROR;
-        } catch(ExecutionException e){
-                        e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
 
             out.printf("error: %s%n", e.getMessage());
             rc = CommandResult.RESULT_ERROR;
 
         }
-        
+
         return rc;
     }
-  
+
 }

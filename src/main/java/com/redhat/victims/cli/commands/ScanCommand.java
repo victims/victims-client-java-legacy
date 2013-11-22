@@ -1,4 +1,3 @@
-
 package com.redhat.victims.cli.commands;
 
 /*
@@ -21,7 +20,6 @@ package com.redhat.victims.cli.commands;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * #L%
  */
-
 import com.redhat.victims.VictimsException;
 import com.redhat.victims.VictimsRecord;
 import com.redhat.victims.VictimsResultCache;
@@ -43,7 +41,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-
 /**
  *
  * @author gm
@@ -51,62 +48,63 @@ import java.util.List;
 public class ScanCommand implements Command {
 
     private Usage help;
-    private List<String> arguments; 
- 
-    public ScanCommand(){
-      help = new Usage(getName(), "scans the supplied .jar file and reports any vulnerabilities");
-      help.addExample("path/to/file.jar");
-      help.addExample("/directory/full/of/jars");
+    private List<String> arguments;
+
+    public ScanCommand() {
+        help = new Usage(getName(), "scans the supplied .jar file and reports any vulnerabilities");
+        help.addExample("path/to/file.jar");
+        help.addExample("/directory/full/of/jars");
     }
-  
+
     @Override
     public final String getName() {
         return "scan";
     }
-    
-    public String checksum(String filename){
+
+    public String checksum(String filename) {
         String hash = null;
-        try { 
+        try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
             InputStream is = new FileInputStream(new File(filename));
             byte[] buffer = new byte[1024];
-            while (is.read(buffer) > 0){
+            while (is.read(buffer) > 0) {
                 md.update(buffer);
             }
-            
+
             byte[] digest = md.digest();
             hash = String.format("%0" + (digest.length << 1) + "X", new BigInteger(1, digest));
-           
+
         } catch (NoSuchAlgorithmException e) {
-        } catch (FileNotFoundException e){         
-        } catch (IOException e){
+        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
         }
-        
+
         return hash;
-       
+
     }
 
     @Override
     public CommandResult execute(List<String> args) {
-      
-        if (args == null){
+
+        if (args == null) {
             return new ExitInvalid("file or directory expected");
         }
-        
-        VictimsDBInterface db; 
-        VictimsResultCache cache;
-      
-        try {
-           db = VictimsDB.db();
-           cache = new VictimsResultCache();
 
-        } catch (VictimsException e){
+        VictimsDBInterface db;
+        VictimsResultCache cache;
+
+        try {
+            db = VictimsDB.db();
+            cache = new VictimsResultCache();
+
+        } catch (VictimsException e) {
+            e.printStackTrace();
             return new ExitFailure(e.getMessage());
         }
-                
+
         CommandResult result = new CommandResult();
-        for (String arg : args){
-            
+        for (String arg : args) {
+
             // Check cache 
             String key = checksum(arg);
             if (key != null && cache.exists(key)) {
@@ -118,38 +116,45 @@ public class ScanCommand implements Command {
                             result.addOutput(cve);
                             result.addOutput(" ");
                         }
+
                         continue;
+                    } else {
+                        result.addVerboseOutput(arg + " ok");
                     }
                 } catch (VictimsException e) {
+                    e.printStackTrace();
                     result.addVerboseOutput(e.getMessage());
                 }
             }
-            
+
             // Scan the item
             ArrayList<VictimsRecord> records = new ArrayList();
             try {
-             
+
                 VictimsScanner.scan(arg, records);
-                for (VictimsRecord record : records){
-                    
-                    try{ 
+                for (VictimsRecord record : records) {
+
+                    try {
                         HashSet<String> cves = db.getVulnerabilities(record);
-                        if (key != null)
+                        if (key != null) {
                             cache.add(key, cves);
-                        if (! cves.isEmpty()){
+                        }
+                        if (!cves.isEmpty()) {
                             result.addOutput(String.format("%s VULNERABLE! ", arg));
-                            for (String cve : cves){
+                            for (String cve : cves) {
                                 result.addOutput(cve);
                                 result.addOutput(" ");
                             }
+                        } else {
+                            result.addVerboseOutput(arg + " ok");
                         }
-                        
-                    } catch(VictimsException e){
+
+                    } catch (VictimsException e) {
                         e.printStackTrace();
                         return new ExitFailure(e.getMessage());
                     }
                 }
-            } catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
                 return new ExitFailure(e.getMessage());
             }
@@ -159,9 +164,9 @@ public class ScanCommand implements Command {
 
     @Override
     public String usage() {
-      return help.toString();
+        return help.toString();
     }
-    
+
     @Override
     public void setArguments(List<String> args) {
         this.arguments = args;
@@ -171,10 +176,10 @@ public class ScanCommand implements Command {
     public CommandResult call() throws Exception {
         return execute(this.arguments);
     }
-    
+
     @Override
-    public Command newInstance(){
+    public Command newInstance() {
         return new ScanCommand();
     }
-    
+
 }

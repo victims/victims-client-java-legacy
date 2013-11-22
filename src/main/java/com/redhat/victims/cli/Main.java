@@ -20,7 +20,6 @@ package com.redhat.victims.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * #L%
  */
-
 import com.redhat.victims.cli.commands.Command;
 import com.redhat.victims.cli.commands.LastUpdateCommand;
 import com.redhat.victims.cli.commands.ConfigureCommand;
@@ -28,47 +27,61 @@ import com.redhat.victims.cli.commands.ScanCommand;
 import com.redhat.victims.cli.commands.SynchronizeCommand;
 import com.redhat.victims.cli.commands.PomScannerCommand;
 import com.redhat.victims.cli.results.CommandResult;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 /**
  *
  * @author gm
  */
 public class Main {
-    public static void main(String args[]){
-        
+
+    public static void main(String args[]) {
+
         Repl repl = new Repl();
         repl.register(new ConfigureCommand());
         repl.register(new LastUpdateCommand());
         repl.register(new SynchronizeCommand());
         repl.register(new ScanCommand());
         repl.register(new PomScannerCommand());
-        
-        if (args.length > 0){
-            
+
+        if (args.length > 0) {
+
             StringBuilder sb = new StringBuilder();
-            for (String arg : args){
+            for (String arg : args) {
                 sb.append(arg);
                 sb.append(" ");
             }
             Command cmd = repl.eval(sb.toString());
             try {
-                CommandResult res = cmd.call();
-                if (res != null)
-                    repl.print(res);
-                                
-                repl.shutdown(true);
+                if (cmd != null){
+                    CommandResult res = cmd.call();
+                    if (res != null) {
+                        repl.print(res);
+                    }
+
+                    repl.shutdown(true);
+                }
 
             } catch (Exception e) {
                 System.out.println(e);
-                          
+
             }
-              
+
         } else {
-            System.exit(repl.loop());
+            // Don't launch repl by default (need to set -Dvictims.cli.repl)
+            //String setting = System.getProperty(Repl.INTERACTIVE);
+            //if (setting != null && setting.equals("true")) {
+                System.exit(repl.loop());
+            
+//            } else {
+//                try {
+//                    System.out.println(repl.eval("help").call().toString());
+//                } catch (Exception e) {
+//                    System.err.println("error: " + e.getMessage());
+//                }
+//            }
         }
-        
+
     }
-    
+
 }
