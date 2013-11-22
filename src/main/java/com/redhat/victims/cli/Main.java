@@ -30,7 +30,26 @@ import com.redhat.victims.cli.results.CommandResult;
 
 
 /**
- *
+ * A simple wrapper entry point to the REPL. There are three 
+ * potential paths: 
+ * 
+ * The user supplies command line arguments - 
+ * 
+ *   java -jar client.jar foo bar 
+ * 
+ * In this instance the client will convert these arguments to a 
+ * single eval(print(read)) call. 
+ * 
+ *   java -Dvictims.cli.repl=true -jar client.jar
+ * 
+ * In this usage the client will run as an interactive REPL and loop 
+ * forever until the users exits. 
+ * 
+ *   java -jar client.jar
+ * 
+ * If the client is run without any arguments and the system property to 
+ * run in interactive mode then the help and usage information is shown. 
+ * 
  * @author gm
  */
 public class Main {
@@ -44,6 +63,7 @@ public class Main {
         repl.register(new ScanCommand());
         repl.register(new PomScannerCommand());
 
+        // Convert command line arguments into single repl invocation. 
         if (args.length > 0) {
 
             StringBuilder sb = new StringBuilder();
@@ -72,7 +92,8 @@ public class Main {
             String setting = System.getProperty(Repl.INTERACTIVE);
             if (setting != null) {
                 System.exit(repl.loop());
-                            
+                
+            // Show help
             } else {
                 try {
                     System.out.println(repl.eval("help").call().toString());

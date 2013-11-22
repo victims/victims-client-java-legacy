@@ -58,7 +58,7 @@ public class SynchronizeCommand implements Command {
             return result;
                     
         } catch (VictimsException e){
-            e.printStackTrace();
+            //e.printStackTrace();
             return new ExitFailure(e.getMessage());
         }
     }

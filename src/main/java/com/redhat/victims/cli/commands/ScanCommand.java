@@ -98,7 +98,7 @@ public class ScanCommand implements Command {
             cache = new VictimsResultCache();
 
         } catch (VictimsException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             return new ExitFailure(e.getMessage());
         }
 
@@ -122,7 +122,7 @@ public class ScanCommand implements Command {
                         result.addVerboseOutput(arg + " ok");
                     }
                 } catch (VictimsException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     result.addVerboseOutput(e.getMessage());
                 }
             }
@@ -150,12 +150,12 @@ public class ScanCommand implements Command {
                         }
 
                     } catch (VictimsException e) {
-                        e.printStackTrace();
+                        //e.printStackTrace();
                         return new ExitFailure(e.getMessage());
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 return new ExitFailure(e.getMessage());
             }
         }

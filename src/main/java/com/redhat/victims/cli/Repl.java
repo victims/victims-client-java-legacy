@@ -44,7 +44,31 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- *
+ * This started out as a basic REPL implementation with the 
+ * goal of dispatching different commands related to victims 
+ * usage. The initial implementation has been perverted a 
+ * little to allow for asynchronous dispatch of commands 
+ * with the aim of facilitating better performance (at the cost
+ * of this mess). 
+ * 
+ * It uses an executor to dispatch invocations of commands 
+ * and watches for task completions. 
+ * 
+ * By default the following commands are registered when 
+ * a REPL is created: 
+ * 
+ *  + help - Will list the help information for each command registered.
+ * 
+ *  + exit - Exits the `loop`
+ * 
+ *  + map  - Maps another command to all other supplied arguments 
+ *               asynchronously. e.g. map scan file1.jar file2.jar
+ * 
+ * 
+ * There are currently a couple of system properties that allow you 
+ * to tweak the verbosity of output and whether or not to run in 
+ * interactive mode (This mostly is to decide if we should show the prompt).
+ * 
  * @author gm
  */
 public class Repl {
@@ -64,6 +88,7 @@ public class Repl {
     private List<Future<CommandResult>> completed;
 
     Repl(InputStream input, PrintStream output, String prompt) {
+        
         this.in = new BufferedReader(new InputStreamReader(input));
         this.out = output;
         this.prompt = prompt;
@@ -248,17 +273,15 @@ public class Repl {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             out.printf("error: %s%n", e.getMessage());
             rc = CommandResult.RESULT_ERROR;
         } catch (InterruptedException e) {
-            e.printStackTrace();
-
+            //e.printStackTrace();
             out.printf("error: %s%n", e.getMessage());
             rc = CommandResult.RESULT_ERROR;
         } catch (ExecutionException e) {
-            e.printStackTrace();
-
+            //e.printStackTrace();
             out.printf("error: %s%n", e.getMessage());
             rc = CommandResult.RESULT_ERROR;
 

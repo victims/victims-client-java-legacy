@@ -54,7 +54,7 @@ public class LastUpdateCommand  implements Command {
             return new ExitSuccess(db.lastUpdated().toString());
                     
         } catch (VictimsException e){
-            e.printStackTrace();
+            //e.printStackTrace();
             return new ExitFailure(e.getMessage());
         }
     }

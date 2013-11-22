@@ -81,7 +81,7 @@ public class ReplTest {
                 getVulnerableFile(file); // just prefill the .testdata dir
 
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 System.err.printf("too bad: %s%n", e.getMessage());
             }
         }
