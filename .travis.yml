@@ -2,3 +2,7 @@ language: java
 jdk:
   - openjdk7
 install: mvn install -Dgpg.skip=true
+notifications:
+  email: false
+  irc: "irc.freenode.org#victi.ms"
+  skip_join: false
