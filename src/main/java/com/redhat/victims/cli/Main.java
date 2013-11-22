@@ -69,17 +69,17 @@ public class Main {
 
         } else {
             // Don't launch repl by default (need to set -Dvictims.cli.repl)
-            //String setting = System.getProperty(Repl.INTERACTIVE);
-            //if (setting != null && setting.equals("true")) {
+            String setting = System.getProperty(Repl.INTERACTIVE);
+            if (setting != null) {
                 System.exit(repl.loop());
-            
-//            } else {
-//                try {
-//                    System.out.println(repl.eval("help").call().toString());
-//                } catch (Exception e) {
-//                    System.err.println("error: " + e.getMessage());
-//                }
-//            }
+                            
+            } else {
+                try {
+                    System.out.println(repl.eval("help").call().toString());
+                } catch (Exception e) {
+                    System.err.println("error: " + e.getMessage());
+                }
+            }
         }
 
     }

@@ -8,4 +8,5 @@ VICTIMS_JAR="victims-client-${VICTIMS_CLIENT_VERSION}-standalone.jar"
 VICTIMS_HOME=${VICTIMS_HOME:-$(pwd)}
 VICTIMS_CLIENT="${VICTIMS_HOME}/${VICTIMS_JAR}"
 
+echo "Updating victims vulnerability definitions. Last update: $(java -jar ${VICTIMS_CLIENT} last-update)"
 java -jar ${VICTIMS_CLIENT} sync
