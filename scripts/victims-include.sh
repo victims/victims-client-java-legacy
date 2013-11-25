@@ -12,10 +12,13 @@ VICTIMS_DB_URL=${VICTIMS_DB_URL:-"jdbc:h2:${VICTIMS_HOME}/victims;MVCC=true"}
 VICTIMS_DB_USER=${VICTIMS_DB_USER:-"victims"}
 VICTIMS_DB_PASS=${VICTIMS_DB_PASS:-"victims"}
 VICTIMS_DB_PURGE=${VICTIMS_DB_PURGE:-"false"}
-
+VICTIMS_CLI_VERBOSE=${VICTIMS_CLI_VERBOSE:-"false"}
+VICTIMS_CLI_INTERACTIVE=${VICTIMS_CLI_INTERACTIVE:-"false"}
 
 victims_run(){
     java \
+        -Dvictims.cli.repl=${VICTIMS_CLI_INTERACTIVE}\
+        -Dvictims.cli.verbose=${VICTIMS_CLI_VERBOSE}\
         -Dvictims.home=${VICTIMS_HOME}\
         -Dvictims.service.uri=${VICTIMS_SERVICE_URI}\
         -Dvictims.service.entry=${VICTIMS_SERVICE_ENTRY}\

@@ -17,14 +17,15 @@ execute on top of the victims client REPL.
 ### Using the repl directly
 
 Getting verbose output 
+
     $ java -Dvictims.cli.verbose=true -jar victims-client-1.0-SNAPSHOT-standalone.jar
 
 Starting the REPL
 
     $ java -Dvictims.cli.repl=true -jar victims-client-1.0-SNAPSHOT-standalone.jar 
 
-
 Asking for help
+
     > help
     help - displays help for each command
         help 

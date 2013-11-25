@@ -11,8 +11,8 @@ if [ $# == 0 ]; then
 fi
 
 if [ -d $1 ]; then
-    find $1 -name \*.jar | awk '{ print "scan " $1 }' | java -Dvictims.cli.repl=pipe -Dvictims.home=${VICTIMS_HOME} -jar ${VICTIMS_CLIENT}
+    find $1 -name \*.jar | awk '{ print "scan " $1 }' | VICTIMS_CLI_INTERACTIVE=pipe victims_run
 else
-    java -Dvictims.home=${VICTIMS_HOME} -jar ${VICTIMS_CLIENT} scan $1
+    victims_run scan $1
 fi
 
