@@ -16,18 +16,28 @@ execute on top of the victims client REPL.
 
 ### Using the repl directly
 
+Getting verbose output 
+    $ java -Dvictims.cli.verbose=true -jar victims-client-1.0-SNAPSHOT-standalone.jar
+
 Starting the REPL
 
-    $ java -jar victims-client-1.0-SNAPSHOT-standalone.jar 
+    $ java -Dvictims.cli.repl=true -jar victims-client-1.0-SNAPSHOT-standalone.jar 
+
 
 Asking for help
-
+    > help
     help - displays help for each command
         help 
         help config
 
+    scan-pom - Scan dependencies in a pom.xml file
+        scan-pom pom.xml
+
     sync - update the victims database definitions
         sync 
+
+    map - asynchronously maps a command to each input argument
+        map scan file1.jar file2.jar file3.jar file4.jar
 
     config - list, sets or gets configuration options for the victims client
         config list
@@ -38,13 +48,11 @@ Asking for help
         scan path/to/file.jar
         scan /directory/full/of/jars
 
-    quiet - produces less verbose output
-        quiet 
-
     last-update - returns the last time the database was updated
         last-update 
 
     exit - exit from interactive mode
+        
 
 
 Checking the last time you synchronized against the victims database
@@ -86,6 +94,17 @@ Scanning a .jar file
     > scan /home/gm/.m2/repository/org/springframework/spring/2.5.6/spring-2.5.6.jar
     /home/gm/.m2/repository/org/springframework/spring/2.5.6/spring-2.5.6.jar VULNERABLE! CVE-2009-1190 CVE-2011-2730 CVE-2010-1622 
 
+
+Scanning a .pom file
+    
+    > scan-pom test/pom.xml 
+    org.jboss.resteasy, resteasy-fastinfoset-provider, 1.2.1.GA_CP01 VULNERABLE! CVE-2012-0818 
+
+
+Mapping another victims command to a range of input values asynchronously.
+
+    > map scan file1.jar file2.jar file3.jar
+
 Scripting victims tasks
 
     java -jar victims-client-1.0-SNAPSHOT-standalone.jar  <<EOF
@@ -99,53 +118,17 @@ Scripting victims tasks
 
 ### Wrapper scripts
 
-#### Execution of single command 
+#### Synchronizing with victims service
+    $ scripts/victims-update.sh 
 
-    java -jar victims-client-1.0-SNAPSHOT-standalone.jar sync
+#### Scanning a single .jar file
+    $ scripts/victims-scan.sh file1.jar
 
-#### Scanning multiple files
+#### Recursively scanning a directory 
+    $ scripts/victims-scan.sh ~/.m2/repository
 
-    find . -name \*.jar -exec java -jar victims-client-1.0-SNAPSHOT-standalone.jar scan {} \;
- 
-
-#### Using the victims wrapper script
-
-An example shell script that wraps the victims .jar file is located in 
-scripts/victims.sh  
-    
-```
-$ scripts/victims.sh
-
-victims - Check jar files against a database of known vulnerable 
-          artifacts. 
-
-Usage:
-
-    -h          Shows this help message.
-
-    -u          Updates the victims vulnerability definitions.
-
-    -s  <path>  Scans the supplied file or directory to see if 
-                it matches a definition in the victims vulnerability
-                database.
-
-    -p          Scan dependencies listed in a pom.xml file.
-
-    -i          Interactive mode.
-
-    -f          Run a victims script
-
-
-Examples:
-
-  To update the victims vulnerability definitions - 
-    victims -u 
-
-  To scan a jar file for vulnerabilities: 
-    victims -s example.jar 
-
-
-```
+#### Scanning multiple input arguments 
+    $ scripts/victims-map-scan.sh file1.jar file2.jar file3.jar **/*.jar
 
 #### Overwriting configuration settings. 
 
@@ -158,5 +141,9 @@ environment variable, falling back to safe defaults. These settings are:
 * VICTIMS_HOME - Where the victims database, victims cache and the client .jar file live.
 * VICTIMS_CACHE_PURGE - Dumps the cache before the scan.
 * VICTIMS_ALGORITHMS - Selects the algorithm/s to use for hashing.
+* VICTIMS_DB_URL - Set the JDBC url for victims database connection 
+* VICTIMS_DB_DRIVER - Set the JDBC database driver to use for the connection
+* VICTIMS_DB_USER - Set the victims database user id
+* VICTIMS_DB_PASS - Set the victims database password
 * VICTIMS_DB_PURGE - Dumps the database of vulnerability definitions. 
  
