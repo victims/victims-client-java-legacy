@@ -105,6 +105,13 @@ public class ScanCommand implements Command {
         CommandResult result = new CommandResult();
         for (String arg : args) {
 
+            // Skip empty files.. 
+            File check = new File(arg);
+            if (check.exists() && check.isFile() && check.length() == 0){
+                result.addOutput(String.format("%s is an empty file %n", arg));
+                continue;
+            } 
+            
             // Check cache 
             String key = checksum(arg);
             if (key != null && cache.exists(key)) {

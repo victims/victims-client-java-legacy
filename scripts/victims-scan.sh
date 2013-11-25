@@ -3,10 +3,7 @@
 # perform a victims scan of a file or directory
 #==============================================================================
 
-VICTIMS_CLIENT_VERSION="1.0-SNAPSHOT"
-VICTIMS_JAR="victims-client-${VICTIMS_CLIENT_VERSION}-standalone.jar"
-VICTIMS_HOME=${VICTIMS_HOME:-$(pwd)}
-VICTIMS_CLIENT="${VICTIMS_HOME}/${VICTIMS_JAR}"
+source $(dirname $0)/victims-include.sh
 
 if [ $# == 0 ]; then 
     echo "usage: $0 <file|directory>"
@@ -14,8 +11,8 @@ if [ $# == 0 ]; then
 fi
 
 if [ -d $1 ]; then
-    find $1 -name \*.jar | awk '{ print "scan " $1 }' | java -Dvictims.cli.repl=pipe -jar ${VICTIMS_CLIENT}
+    find $1 -name \*.jar | awk '{ print "scan " $1 }' | java -Dvictims.cli.repl=pipe -Dvictims.home=${VICTIMS_HOME} -jar ${VICTIMS_CLIENT}
 else
-    java -jar ${VICTIMS_CLIENT} scan $1
+    java -Dvictims.home=${VICTIMS_HOME} -jar ${VICTIMS_CLIENT} scan $1
 fi
 
