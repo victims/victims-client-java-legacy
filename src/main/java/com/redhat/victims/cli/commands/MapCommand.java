@@ -49,7 +49,7 @@ public class MapCommand implements Command {
         this.completor= completor;
         this.results = results;
         
-        help = new Usage(getName(), "asynchronously maps a command to each input argument");
+        help = new Usage(getName(), "Asynchronously maps a command to each input argument");
         help.addExample("scan file1.jar file2.jar file3.jar file4.jar");
         
     }

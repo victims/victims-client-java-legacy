@@ -57,7 +57,7 @@ public class ConfigureCommand implements Command {
     
     public ConfigureCommand(){
      
-      help = new Usage(getName(), "list, sets or gets configuration options for the victims client");
+      help = new Usage(getName(), "List, sets or gets configuration options for the victims client");
       help.addExample("list");
       help.addExample("get victims.home");
       help.addExample("set victims.home /home/user/example");

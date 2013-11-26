@@ -21,52 +21,69 @@ package com.redhat.victims.cli.commands;
  * #L%
  */
 
-import com.redhat.victims.VictimsException;
+import com.redhat.victims.VictimsRecord;
+import com.redhat.victims.VictimsScanner;
 import com.redhat.victims.cli.results.CommandResult;
-import com.redhat.victims.cli.results.ExitFailure;
 import com.redhat.victims.cli.results.ExitSuccess;
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
+ *
  * @author gm
  */
-public class LastUpdateCommand  implements Command {
+public class DumpCommand implements Command {
 
+        
     private Usage help;
     private List<String> arguments; 
-
-    public LastUpdateCommand(){
-        help = new Usage(getName(), "Returns the last time the database was updated");
-        help.addExample("");
+    
+    public DumpCommand(){
+        help = new Usage(getName(), "Shows a fingerprint for a .jar file");
+        help.addExample("example.jar");       
     }
-  
+    
     @Override
     public final String getName() {
-        return "last-update";
+        return "dump";
+    }
+
+    @Override
+    public void setArguments(List<String> args) {
+        this.arguments = args;
     }
 
     @Override
     public CommandResult execute(List<String> args) {
-          try { 
-            VictimsDBInterface db = VictimsDB.db();       
-            return new ExitSuccess(db.lastUpdated().toString());
-                    
-        } catch (VictimsException e){
-            //e.printStackTrace();
-            return new ExitFailure(e.getMessage());
+        
+        CommandResult result = new ExitSuccess(null);
+        
+        for (String arg : args) {
+            try { 
+                ArrayList<VictimsRecord> records = new ArrayList();
+                VictimsScanner.scan(arg, records);
+                for (VictimsRecord record : records){
+                    result.addOutput(record.toString());
+                }             
+            } catch (IOException e){
+                result.addOutput(e.toString());
+            }
+            
         }
+        return result;
     }
 
     @Override
     public String usage() {
         return help.toString();
     }
-      
+
     @Override
-    public void setArguments(List<String> args) {
-        this.arguments = args;
+    public Command newInstance() {
+        DumpCommand cmd = new DumpCommand();
+        cmd.setArguments(this.arguments);
+        return cmd;
     }
 
     @Override
@@ -74,8 +91,4 @@ public class LastUpdateCommand  implements Command {
         return execute(this.arguments);
     }
     
-    @Override
-    public Command newInstance(){
-        return new LastUpdateCommand();
-    }
 }

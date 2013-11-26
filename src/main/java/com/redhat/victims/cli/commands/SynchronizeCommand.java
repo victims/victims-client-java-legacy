@@ -39,7 +39,7 @@ public class SynchronizeCommand implements Command {
 
     
     public SynchronizeCommand(){
-      help = new Usage(getName(), "update the victims database definitions");
+      help = new Usage(getName(), "Update the victims database definitions");
       help.addExample("");
     }
     

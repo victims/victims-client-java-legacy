@@ -23,6 +23,7 @@ package com.redhat.victims.cli;
 import com.redhat.victims.cli.commands.Command;
 import com.redhat.victims.cli.commands.LastUpdateCommand;
 import com.redhat.victims.cli.commands.ConfigureCommand;
+import com.redhat.victims.cli.commands.DumpCommand;
 import com.redhat.victims.cli.commands.ScanCommand;
 import com.redhat.victims.cli.commands.SynchronizeCommand;
 import com.redhat.victims.cli.commands.PomScannerCommand;
@@ -62,6 +63,7 @@ public class Main {
         repl.register(new SynchronizeCommand());
         repl.register(new ScanCommand());
         repl.register(new PomScannerCommand());
+        repl.register(new DumpCommand());
 
         // Convert command line arguments into single repl invocation. 
         if (args.length > 0) {

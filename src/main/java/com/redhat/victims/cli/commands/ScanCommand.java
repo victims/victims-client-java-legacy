@@ -51,7 +51,7 @@ public class ScanCommand implements Command {
     private List<String> arguments;
 
     public ScanCommand() {
-        help = new Usage(getName(), "scans the supplied .jar file and reports any vulnerabilities");
+        help = new Usage(getName(), "Scans the supplied .jar file and reports any vulnerabilities");
         help.addExample("path/to/file.jar");
         help.addExample("/directory/full/of/jars");
     }

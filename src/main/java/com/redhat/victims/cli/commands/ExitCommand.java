@@ -34,7 +34,7 @@ public class ExitCommand implements Command {
     private List<String> arguments;
 
     public ExitCommand() {
-        help = new Usage(getName(), "exit from interactive mode");
+        help = new Usage(getName(), "Exit from interactive mode");
     }
 
     @Override
