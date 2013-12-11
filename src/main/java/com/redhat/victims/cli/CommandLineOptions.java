@@ -92,12 +92,16 @@ class CommandLineOption<T> {
         
         int wrapAt = 40;
         if (description.length() > wrapAt){
+            
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("  %-24s", name));
+            
             for (int i = 0; i < description.length(); i+= wrapAt){
+                
                 if (i != 0){
                     sb.append(String.format("  %-24s", ""));
                 }
+                
                 int diff = 0;
                 int end = Math.min(i+wrapAt, description.length());
                 if (end != description.length()){
@@ -112,7 +116,6 @@ class CommandLineOption<T> {
                         continue;  
                 }
                 
-                System.out.println("Substring = " + description.substring(i, end));
                 sb.append(description.substring(i, end).trim());
                 sb.append(String.format("%n"));
                 

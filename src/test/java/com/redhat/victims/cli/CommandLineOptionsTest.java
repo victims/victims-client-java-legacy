@@ -43,7 +43,6 @@ public class CommandLineOptionsTest {
         String[] emptyArguments = {};
         assert(opts.parse(emptyArguments));
         
-        System.out.println("WHOO WHOO WHOO");
         String[] listOfFiles = { "file1.txt", "file2.txt", "file3.txt" };
         if (! opts.parse(listOfFiles)){
             System.out.println(opts.getUsage());
