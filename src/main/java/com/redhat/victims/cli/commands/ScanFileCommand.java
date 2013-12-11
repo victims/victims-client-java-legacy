@@ -45,20 +45,21 @@ import java.util.List;
  *
  * @author gm
  */
-public class ScanCommand implements Command {
+public class ScanFileCommand implements Command {
 
+    public static final String COMMAND_NAME = "scan-file";
+    
     private Usage help;
     private List<String> arguments;
 
-    public ScanCommand() {
+    public ScanFileCommand() {
         help = new Usage(getName(), "Scans the supplied .jar file and reports any vulnerabilities");
         help.addExample("path/to/file.jar");
-        help.addExample("/directory/full/of/jars");
     }
 
     @Override
     public final String getName() {
-        return "scan";
+        return COMMAND_NAME;
     }
 
     public String checksum(String filename) {
@@ -108,7 +109,7 @@ public class ScanCommand implements Command {
             // Skip empty files.. 
             File check = new File(arg);
             if (check.exists() && check.isFile() && check.length() == 0){
-                result.addOutput(String.format("%s is an empty file %n", arg));
+                result.addOutput(String.format("%s is an empty file", arg));
                 continue;
             } 
             
@@ -186,7 +187,7 @@ public class ScanCommand implements Command {
 
     @Override
     public Command newInstance() {
-        return new ScanCommand();
+        return new ScanFileCommand();
     }
 
 }

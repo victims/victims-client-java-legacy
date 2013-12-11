@@ -34,6 +34,9 @@ import com.redhat.victims.cli.results.*;
  */
 public class ConfigureCommand implements Command {
 
+    
+    public static final String COMMAND_NAME = "config";
+
     final static List<String> settings;
     
     static {
@@ -65,7 +68,7 @@ public class ConfigureCommand implements Command {
     
     @Override
     public final String getName() {
-        return "config";
+        return COMMAND_NAME;
     }
     
     private CommandResult list(){

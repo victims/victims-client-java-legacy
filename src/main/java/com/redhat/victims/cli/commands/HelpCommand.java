@@ -26,6 +26,7 @@ package com.redhat.victims.cli.commands;
 import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.results.ExitInvalid;
 import com.redhat.victims.cli.results.ExitSuccess;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,8 @@ import java.util.Map;
  * @author gm
  */
 public class HelpCommand implements Command {
+
+  public static final String COMMAND_NAME = "help";
 
   private final Map<String, Command> commands;
   private Usage help;
@@ -50,7 +53,7 @@ public class HelpCommand implements Command {
 
   @Override
   public final String getName() {
-    return "help";
+    return COMMAND_NAME;
   }
 
   @Override
@@ -58,7 +61,10 @@ public class HelpCommand implements Command {
 
     if (args == null || args.isEmpty()) {
       ExitSuccess result = new ExitSuccess(null);
-      for (String cmd : commands.keySet()) {
+      String[] keys = new String[commands.keySet().size()]; 
+      commands.keySet().toArray(keys);
+      Arrays.sort(keys);
+      for (String cmd : keys) {
         result.addOutput(commands.get(cmd).usage());
         result.addOutput(String.format("%n"));
       }

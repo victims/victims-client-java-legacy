@@ -34,6 +34,8 @@ import java.util.List;
  */
 public class LastUpdateCommand  implements Command {
 
+    public static final String COMMAND_NAME = "last-update";
+    
     private Usage help;
     private List<String> arguments; 
 
@@ -44,14 +46,14 @@ public class LastUpdateCommand  implements Command {
   
     @Override
     public final String getName() {
-        return "last-update";
+        return COMMAND_NAME;
     }
 
     @Override
     public CommandResult execute(List<String> args) {
           try { 
             VictimsDBInterface db = VictimsDB.db();       
-            return new ExitSuccess(db.lastUpdated().toString());
+            return new ExitSuccess("Database last updated on: " + db.lastUpdated().toString());
                     
         } catch (VictimsException e){
             //e.printStackTrace();

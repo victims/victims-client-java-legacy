@@ -34,6 +34,7 @@ import java.util.List;
  */
 public class SynchronizeCommand implements Command {
 
+    public static final String COMMAND_NAME = "sync";
     private Usage help;
     private List<String> arguments; 
 
@@ -45,7 +46,7 @@ public class SynchronizeCommand implements Command {
     
     @Override
     public final String getName() {
-        return "sync";
+        return COMMAND_NAME;
     }
 
     @Override

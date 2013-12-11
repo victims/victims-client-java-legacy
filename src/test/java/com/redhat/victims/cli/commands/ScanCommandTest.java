@@ -39,7 +39,7 @@ public class ScanCommandTest {
         System.setProperty("victims.cache.purge", "true");
           
         
-        ScanCommand cmd = new ScanCommand();
+        ScanFileCommand cmd = new ScanFileCommand();
         List<String> args = new ArrayList(); 
         args.add(filename);
         //args.add(".testdata/org/springframework/spring/2.5.6/spring-2.5.6.jar");

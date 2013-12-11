@@ -35,7 +35,8 @@ import java.util.List;
  */
 public class DumpCommand implements Command {
 
-        
+    public static final String COMMAND_NAME = "dump";
+    
     private Usage help;
     private List<String> arguments; 
     
@@ -46,7 +47,7 @@ public class DumpCommand implements Command {
     
     @Override
     public final String getName() {
-        return "dump";
+        return COMMAND_NAME;
     }
 
     @Override

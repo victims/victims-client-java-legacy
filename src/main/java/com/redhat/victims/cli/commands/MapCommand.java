@@ -21,36 +21,30 @@ package com.redhat.victims.cli.commands;
  * #L%
  */
 
+import com.redhat.victims.cli.Repl;
 import com.redhat.victims.cli.results.ExitInvalid;
 import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.results.ExitSuccess;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Future;
 
 /**
  *
  * @author gm
  */
 public class MapCommand implements Command {
-
+    
+    public static final String COMMAND_NAME = "map";
+    
     private Usage help;
     private List<String> arguments; 
-    private Map<String, Command> commands;
-    private ExecutorCompletionService<CommandResult> completor;
-    private List<Future<CommandResult>> results;
-
-    public MapCommand(Map<String, Command> commands, 
-            ExecutorCompletionService<CommandResult> completor, 
-            List<Future<CommandResult>> results) {
-        this.commands = commands;
-        this.completor= completor;
-        this.results = results;
+    private Repl repl;
+    
+    public MapCommand(Repl repl) {
+        this.repl = repl;
         
         help = new Usage(getName(), "Asynchronously maps a command to each input argument");
-        help.addExample("scan file1.jar file2.jar file3.jar file4.jar");
+        help.addExample("scan-file file1.jar file2.jar file3.jar file4.jar");
         
     }
     
@@ -62,7 +56,7 @@ public class MapCommand implements Command {
         }
         
         String key = args.remove(0);
-        Command cmd = commands.get(key);
+        Command cmd = repl.getCommand(key);
         if (cmd == null){
             return new ExitInvalid(String.format("invalid command: %s", cmd));
         }
@@ -70,11 +64,11 @@ public class MapCommand implements Command {
         for (String arg : args){
             ArrayList<String> params = new ArrayList();
             params.add(arg);
-            Command tmp = cmd.newInstance();
-            tmp.setArguments(params);
-            results.add(completor.submit(tmp));
-            
+            cmd.setArguments(params);
+            repl.scheduleExecution(cmd);
+ 
         }
+        
         ExitSuccess rc = new ExitSuccess(null);
         rc.addVerboseOutput(String.format("Submitted %d %s tasks", args.size(), cmd.getName()));
         return rc;
@@ -93,7 +87,7 @@ public class MapCommand implements Command {
 
     @Override
     public final String getName() {
-        return "map";
+        return COMMAND_NAME;
     }
 
     @Override
@@ -103,7 +97,9 @@ public class MapCommand implements Command {
     
     @Override
     public Command newInstance(){
-        return new MapCommand(this.commands, this.completor, this.results); 
+        MapCommand inst = new MapCommand(this.repl);
+        inst.setArguments(this.arguments);
+        return inst;
     }
     
 }

@@ -1,28 +1,21 @@
 package com.redhat.victims.cli;
 
-import com.redhat.victims.cli.commands.Command;
-import com.redhat.victims.cli.commands.MapCommand;
-import com.redhat.victims.cli.commands.ScanCommand;
-import com.redhat.victims.cli.results.CommandResult;
+import com.redhat.victims.cli.commands.ScanDirCommand;
+import com.redhat.victims.cli.commands.ScanFileCommand;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.util.concurrent.ExecutionException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -119,7 +112,7 @@ public class ReplTest {
     public void testLoop() throws UnsupportedEncodingException {
         StringBuilder inputData = new StringBuilder();
         for (String file : jars) {
-            String cmd = String.format(String.format("scan %s%s%n", testDataDir, file));
+            String cmd = String.format(String.format("scan-file %s%s%n", testDataDir, file));
             inputData.append(cmd);
         }
 
@@ -127,7 +120,7 @@ public class ReplTest {
         System.out.println("Begin scan test");
         System.setProperty(Repl.VERBOSE, "true");
         Repl repl = new Repl(in, System.out, "victims~> ");
-        repl.register(new ScanCommand());
+        repl.register(new ScanFileCommand());
 
         repl.loop();
         System.out.println("End scan test");
@@ -137,7 +130,7 @@ public class ReplTest {
     @Test
     public void testMap() throws UnsupportedEncodingException {
         StringBuilder inputData = new StringBuilder();
-        inputData.append("map scan ");
+        inputData.append("map scan-file ");
         for (String file : jars) {
             inputData.append(testDataDir);
             inputData.append(file);
@@ -150,11 +143,24 @@ public class ReplTest {
         System.out.println(inputData.toString());
         System.out.println("Begin map test");
         Repl repl = new Repl(in, System.out, "victims~>");
-        repl.register(new ScanCommand());        
+        repl.register(new ScanFileCommand());        
         repl.loop();
      
         System.out.println("End map test");
         
+    }
+    
+    @Test
+    public void testDirectoryWalk() throws Exception{
+        String command = "scan-dir " + testDataDir;
+        
+        System.out.println("Begin scandir test");
+        InputStream in = new ByteArrayInputStream(command.toString().getBytes("UTF-8"));
+        Repl repl = new Repl(in, System.out, "victims->");
+        repl.register(new ScanDirCommand(true, repl));
+        repl.loop();
+     
+        System.out.println("End scandir test");
     }
 
 }

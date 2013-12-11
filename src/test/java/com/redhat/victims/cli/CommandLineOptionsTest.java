@@ -28,7 +28,7 @@ public class CommandLineOptionsTest {
 //            boolean isFlag, 
 //            T defaultValue){
     
-        CommandLineOptions opts = new CommandLineOptions("java -jar victims-client.jar");
+        CommandLineOptions opts = new CommandLineOptions("victims-client");
         opts.addOption(
             new CommandLineOption<Boolean>("-debug", "show debug output", false, false, true, null, Boolean.class));
         opts.addOption(
@@ -42,6 +42,14 @@ public class CommandLineOptionsTest {
         // Empty arguments
         String[] emptyArguments = {};
         assert(opts.parse(emptyArguments));
+        
+        System.out.println("WHOO WHOO WHOO");
+        String[] listOfFiles = { "file1.txt", "file2.txt", "file3.txt" };
+        if (! opts.parse(listOfFiles)){
+            System.out.println(opts.getUsage());
+        } else {
+            System.out.println("You entered the following arguments: "); 
+        }
         
         // Test flags
         String[] helpArgument = {"-help"};
@@ -73,12 +81,26 @@ public class CommandLineOptionsTest {
         String[] requiredArgument = { "-foo", "bar" };
         opts.reset();
         
+        
         assertTrue(opts.parse(requiredArgument));
         
-    }
-
-    @Test
-    public void testGetUsage() {
+       
+        
     }
     
+    @Test
+    public void testScanDir(){
+        
+        Main prog = new Main();
+        prog.runWithArgs(new String[] {"--verbose",  ".testdata" });
+        
+    }
+    
+    @Test
+    public void testDumpJar(){
+        Main prog = new Main();
+        prog.runWithArgs(new String[]{ "--jar-info", ".testdata/org/springframework/spring/2.5.6/spring-2.5.6.jar"});
+    }
+
+
 }

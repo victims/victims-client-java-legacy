@@ -30,6 +30,8 @@ import java.util.List;
  */
 public class ExitCommand implements Command {
 
+    public static final String COMMAND_NAME = "exit";
+    
     private Usage help;
     private List<String> arguments;
 
@@ -39,11 +41,12 @@ public class ExitCommand implements Command {
 
     @Override
     public final String getName() {
-        return "exit";
+        return COMMAND_NAME;
     }
 
     @Override
     public CommandResult execute(List<String> args) {
+        
         return new ExitTerminate(CommandResult.RESULT_SUCCESS);
     }
 

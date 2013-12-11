@@ -43,6 +43,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
  */
 public class PomScannerCommand implements Command {
     
+    public static final String COMMAND_NAME = "scan-pom";
     private Usage help;
     private List<String> arguments; 
 
@@ -54,7 +55,7 @@ public class PomScannerCommand implements Command {
 
     @Override
     public final String getName() {
-        return "scan-pom";
+        return COMMAND_NAME;
     }
 
     private void scanPomFile(File pomFile, CommandResult result){
@@ -65,11 +66,13 @@ public class PomScannerCommand implements Command {
             VictimsDBInterface db = VictimsDB.db();
             Model model = pomReader.read(new FileReader(pomFile));
             for (Dependency dep : model.getDependencies()){
+                
                 HashMap<String, String> gav = new HashMap();
                 String groupId = dep.getGroupId();
                 String artifactId = dep.getArtifactId();
                 String version = dep.getVersion();
-                String info = String.format("%s, %s, %s", groupId, artifactId, version);
+                String info = String.format("%s: %s, %s, %s", 
+                        pomFile.getCanonicalPath(), groupId, artifactId, version);
                 
                 gav.put("groupId", groupId);
                 gav.put("artifactId", artifactId);

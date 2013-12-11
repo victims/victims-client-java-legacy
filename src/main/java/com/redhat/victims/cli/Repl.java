@@ -37,11 +37,16 @@ import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.commands.HelpCommand;
 import com.redhat.victims.cli.commands.ExitCommand;
 import com.redhat.victims.cli.results.ExitTerminate;
+import java.util.Arrays;
+import java.util.ConcurrentModificationException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * This started out as a basic REPL implementation with the 
@@ -54,38 +59,24 @@ import java.util.concurrent.Future;
  * It uses an executor to dispatch invocations of commands 
  * and watches for task completions. 
  * 
- * By default the following commands are registered when 
- * a REPL is created: 
- * 
- *  + help - Will list the help information for each command registered.
- * 
- *  + exit - Exits the `loop`
- * 
- *  + map  - Maps another command to all other supplied arguments 
- *               asynchronously. e.g. map scan file1.jar file2.jar
- * 
- * 
- * There are currently a couple of system properties that allow you 
- * to tweak the verbosity of output and whether or not to run in 
- * interactive mode (This mostly is to decide if we should show the prompt).
- * 
  * @author gm
  */
 public class Repl {
 
     public static final String INTERACTIVE = "victims.cli.repl";
     public static final String VERBOSE = "victims.cli.verbose";
-
+       
     private String prompt;
     private BufferedReader in;
     private PrintStream out;
     private Map<String, Command> commands;
     private boolean verbose;
     private boolean interactive;
+    private boolean shuttingDown;
 
     private ExecutorService executor;
     private ExecutorCompletionService<CommandResult> completor;
-    private List<Future<CommandResult>> completed;
+    private ConcurrentLinkedQueue<Future<CommandResult>> completed;
 
     Repl(InputStream input, PrintStream output, String prompt) {
         
@@ -103,22 +94,106 @@ public class Repl {
         int cores = Runtime.getRuntime().availableProcessors();
         executor = Executors.newFixedThreadPool(cores);
         completor = new ExecutorCompletionService(executor);
-        completed = new ArrayList();
+        completed = new ConcurrentLinkedQueue();
 
-        register(new MapCommand(this.commands, completor, completed));
+        register(new MapCommand(this));
         register(new HelpCommand(this.commands));
         register(new ExitCommand());
+        
+        shuttingDown = false;
     }
 
     Repl() {
         this(System.in, System.out, ">");
     }
-
+    
     final void register(Command cmd) {
         commands.put(cmd.getName(), cmd);
     }
+    
+    public Future<CommandResult> poll(int timeout){
+      
+        if (timeout < 0){
+            return completor.poll();
+        } else{
+            try{ 
+                return completor.poll(timeout, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e){
+                return null;
+            }
+        }
+    }
+    
+    public void scheduleExecution(Command cmd){
+        completed.add(completor.submit(cmd));        
+    }
+    
+    public void runCommand(String commandName, String... optionalArguments){
+       
+        // TODO - Add is shutting down check?        
+        Command cmd = getCommand(commandName);
+        if (cmd != null){
+            ArrayList<String> args = new ArrayList();
+            args.addAll(Arrays.asList(optionalArguments));
+            cmd.setArguments(args);
+            scheduleExecution(cmd); 
+        }
+    }
+    
+    public int scheuduled(){
+        return completed.size();
+    }
+    
+    public Command getCommand(String key){
+        Command c = commands.get(key);
+        if (c != null){
+            return c.newInstance();
+        }
+        return null;
+    }
+    
+    public int processCompleted(int timeout) throws InterruptedException {
+        
+        // process completed jobs 
+        Future<CommandResult> result;
+        while ((result = poll(timeout)) != null) {
+            try {
+                CommandResult r = result.get();
+                completed.remove(result);
+
+                if (r != null) {
+
+                    print(r);
+
+                    // bail
+                    if (r.failed() || r instanceof ExitTerminate) {
+                        
+                        shutdown(false);
+                        
+                        //TODO Replace with execeptions ?
+                        if (r instanceof ExitTerminate)
+                            System.exit(r.getResultCode());
+                        
+                        return r.getResultCode();
+                    }
+                }
+            } catch (InterruptedException ex) {
+                if (verbose){
+                    ex.printStackTrace();
+                }
+            } catch (ExecutionException ex) {
+                if (verbose) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        return 0;
+    }
 
     public void shutdown(boolean wait) throws InterruptedException, ExecutionException {
+        
+        shuttingDown = true;
         try {
             for (Future<CommandResult> task : completed) {
                 if (wait) {
@@ -126,6 +201,11 @@ public class Repl {
                 }
                 task.cancel(true);
             }
+            
+        } catch(ConcurrentModificationException e){     
+            // more jobs were added. make sure we cancel them too.
+            shutdown(wait);
+            
         } finally {
 
             if (executor != null) {
@@ -135,6 +215,7 @@ public class Repl {
     }
 
     private static String unquote(String s) {
+        
         if (s.isEmpty()) {
             return s;
         }
@@ -162,7 +243,7 @@ public class Repl {
         return tokens;
     }
 
-    final String read() {
+    public final String read() {
         try {
             if (interactive) {
                 out.printf("%s ", prompt);
@@ -175,7 +256,7 @@ public class Repl {
         return null;
     }
 
-    final Command eval(String cmd) {
+    public final Command eval(String cmd) {
         if (cmd == null) {
             return null;
         }
@@ -205,7 +286,7 @@ public class Repl {
 
     }
 
-    final void print(CommandResult r) {
+    public final void print(CommandResult r) {
 
         if (r == null || r.getOutput() == null || r.getOutput().isEmpty()) {
             return;
@@ -220,7 +301,7 @@ public class Repl {
 
     }
 
-    final int loop() {
+    public final int loop() {
 
         int rc = 0;
 
@@ -247,47 +328,40 @@ public class Repl {
                 }
 
                 // submit async job
-                if (input != null) {
+                if (input != null && ! shuttingDown ) {
                     Command callable = eval(input);
                     if (callable != null) {
-                        completed.add(completor.submit(callable));
+                        scheduleExecution(callable);
+                        
                     }
                 }
 
                 // process completed jobs 
-                Future<CommandResult> result;
-                while ((result = completor.poll()) != null) {
-                    CommandResult r = result.get();
-                    completed.remove(result);
-
-                    if (r != null) {
-
-                        print(r);
-
-                        // bail
-                        if (r.failed() || r instanceof ExitTerminate) {
-                            shutdown(false);
-                            return r.getResultCode();
-                        }
-                    }
+                if ((rc = processCompleted(-1)) != 0){
+                    return rc;
                 }
+               
             }
         } catch (IOException e) {
-            //e.printStackTrace();
             out.printf("error: %s%n", e.getMessage());
             rc = CommandResult.RESULT_ERROR;
+            if (verbose){
+                e.printStackTrace();
+            }
         } catch (InterruptedException e) {
-            //e.printStackTrace();
             out.printf("error: %s%n", e.getMessage());
             rc = CommandResult.RESULT_ERROR;
+            if (verbose){
+                e.printStackTrace();
+            }
         } catch (ExecutionException e) {
-            //e.printStackTrace();
             out.printf("error: %s%n", e.getMessage());
             rc = CommandResult.RESULT_ERROR;
-
+             if (verbose){
+                e.printStackTrace();
+             }
         }
 
         return rc;
     }
-
 }
