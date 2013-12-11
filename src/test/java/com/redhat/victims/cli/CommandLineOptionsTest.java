@@ -87,19 +87,19 @@ public class CommandLineOptionsTest {
         
     }
     
-    @Test
-    public void testScanDir(){
-        
-        Main prog = new Main();
-        prog.runWithArgs(new String[] {"--verbose",  ".testdata" });
-        
-    }
-    
-    @Test
-    public void testDumpJar(){
-        Main prog = new Main();
-        prog.runWithArgs(new String[]{ "--jar-info", ".testdata/org/springframework/spring/2.5.6/spring-2.5.6.jar"});
-    }
+//    @Test
+//    public void testScanDir(){
+//        
+//        Main prog = new Main();
+//        prog.runWithArgs(new String[] {"--verbose",  ".testdata" });
+//        
+//    }
+//    
+//    @Test
+//    public void testDumpJar(){
+//        Main prog = new Main();
+//        prog.runWithArgs(new String[]{ "--jar-info", ".testdata/org/springframework/spring/2.5.6/spring-2.5.6.jar"});
+//    }
 
 
 }
