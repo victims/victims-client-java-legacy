@@ -23,6 +23,7 @@ package com.redhat.victims.cli;
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -300,7 +301,14 @@ public class CommandLineOptions {
         
         sb.append("OPTIONS:");
         sb.append(String.format("%n%n"));
-        for (CommandLineOption option : options.values()){
+
+        // Ensure options are printed in alphabetical order
+        String[] keys = new String[options.keySet().size()];
+        options.keySet().toArray(keys);
+        Arrays.sort(keys);
+        
+        for (String k : keys){
+            CommandLineOption option = options.get(k);
             sb.append(option.getDescription()).append(String.format("%n%n"));         
         }
         
