@@ -38,24 +38,18 @@ EXAMPLES:
 
 OPTIONS:
 
-  --repl                  run an interactive victims shell
+  --db-status             displays date the database was last
+                          updated
 
-  --victims-db-url        the jdbc url connection string to use
-                          with the victims database
+  --help                  show this help message
 
   --jar-info              displays fingerprint information of the
                           supplied jar file
 
-  --victims-cache-purge   purges all entries in the victims cache
+  --recursive             recurses directory structure when
+                          scanning a directory
 
-  --victims-service-entry the uri path to use when connecting to
-                          the victims service
-
-  --db-status             displays date the database was last
-                          updated
-
-  --victims-service-uri   the uri to use to synchronize with the
-                          victims database
+  --repl                  run an interactive victims shell
 
   --update                synchronize with the victims web service
 
@@ -64,22 +58,29 @@ OPTIONS:
   --vicitms-db-driver     the jdbc driver to use when connecting
                           to the victims database
 
-  --recursive             recurses directory structure when
-                          scanning a directory
+  --victims-cache-purge   purges all entries in the victims cache
 
   --victims-db-pass       set the password to use to connect to
                           the victims database
 
-  --victims-db-user       set the user to connect to the victims
+  --victims-db-purge      purges all entries in the victims
                           database
 
-  --victims-db-purge      purges all entries in the victims
+  --victims-db-url        the jdbc url connection string to use
+                          with the victims database
+
+  --victims-db-user       set the user to connect to the victims
                           database
 
   --victims-home          set the directory where victims data
                           should be stored
 
-  --help                  show this help message
+  --victims-service-entry the uri path to use when connecting to
+                          the victims service
+
+  --victims-service-uri   the uri to use to synchronize with the
+                          victims database
+
 
 ```
 
