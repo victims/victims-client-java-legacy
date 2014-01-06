@@ -24,6 +24,7 @@ package com.redhat.victims.cli;
 import com.redhat.victims.cli.commands.LastUpdateCommand;
 import com.redhat.victims.cli.commands.ConfigureCommand;
 import com.redhat.victims.cli.commands.DumpCommand;
+import com.redhat.victims.cli.commands.CompareCommand;
 import com.redhat.victims.cli.commands.ScanFileCommand;
 import com.redhat.victims.cli.commands.SynchronizeCommand;
 import com.redhat.victims.cli.commands.PomScannerCommand;
@@ -70,6 +71,7 @@ public class Main {
 
     // Options with arguments 
     static final String JAR_INFO                = "--jar-info";
+    static final String COMPARE_JARS            = "--compare-jars";
     static final String VICTIMS_HOME            = "--victims-home";
     static final String VICTIMS_DB_USER         = "--victims-db-user";
     static final String VICTIMS_DB_PASS         = "--victims-db-pass";
@@ -83,6 +85,7 @@ public class Main {
     static {
         Map<String, String> tmp = new HashMap();
         tmp.put(JAR_INFO,               "displays fingerprint information of the supplied jar file"); 
+        tmp.put(COMPARE_JARS,           "compare the hashes of two jar files. Specify the jar files with , as a delimiter, i.e. file1.jar,file2.jar");
         tmp.put(VICTIMS_HOME,           "set the directory where victims data should be stored");
         tmp.put(VICTIMS_DB_USER,        "set the user to connect to the victims database");
         tmp.put(VICTIMS_DB_PASS,        "set the password to use to connect to the victims database");
@@ -200,7 +203,8 @@ public class Main {
         repl.register(new ScanDirCommand(opts.getOption(RECUR_FLAG).flagSet(), repl));
         repl.register(new PomScannerCommand());
         repl.register(new DumpCommand());
-        
+        repl.register(new CompareCommand());
+
         // Handle triggered flags       
         if (opts.getOption(HELP_FLAG).flagSet()){
             System.err.println(opts.getUsage());
@@ -241,7 +245,20 @@ public class Main {
                 }
             } 
             System.exit(0);               
-        }   
+        }
+
+        if (opts.getOption(COMPARE_JARS).hasValue()){
+            String val = extractValue(opts, COMPARE_JARS);
+            if (val != null){
+                repl.runCommand(CompareCommand.COMMAND_NAME, val);
+                try {
+                    repl.shutdown(true);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+            System.exit(0);
+        }
         
         // Remaining files / directories as arguments 
         for (String arg : opts.getArguments()) {
