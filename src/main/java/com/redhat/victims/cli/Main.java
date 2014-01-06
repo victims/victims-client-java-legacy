@@ -71,7 +71,7 @@ public class Main {
 
     // Options with arguments 
     static final String JAR_INFO                = "--jar-info";
-    static final String COMPARE_JARS            = "--compare-jars";
+    static final String COMPARE_JARS            = "--jar-compare";
     static final String VICTIMS_HOME            = "--victims-home";
     static final String VICTIMS_DB_USER         = "--victims-db-user";
     static final String VICTIMS_DB_PASS         = "--victims-db-pass";
