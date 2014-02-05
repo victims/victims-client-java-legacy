@@ -130,13 +130,26 @@ public class Repl {
 
     public void runCommand(String commandName, String... optionalArguments){
 
-        // TODO - Add is shutting down check?
         Command cmd = getCommand(commandName);
         if (cmd != null){
             ArrayList<String> args = new ArrayList();
             args.addAll(Arrays.asList(optionalArguments));
             cmd.setArguments(args);
             scheduleExecution(cmd);
+        }
+    }
+
+    public void runSynchronousCommand(String commandName, String... optionalArguments){
+        Command cmd = getCommand(commandName);
+        if (cmd != null){
+            ArrayList<String> args = new ArrayList();
+            args.addAll(Arrays.asList(optionalArguments));
+            cmd.setArguments(args);
+            CommandResult r = cmd.execute(args);
+            if (r != null){
+                print(r);
+                exitOnFailure(r);
+            }
         }
     }
 
@@ -152,31 +165,11 @@ public class Repl {
         return null;
     }
 
-    public int processCompleted(int timeout) throws InterruptedException {
-
-        // process completed jobs
-        Future<CommandResult> result;
-        while ((result = poll(timeout)) != null) {
+    private void exitOnFailure(CommandResult r) {
+        if (r.failed() ||  r instanceof ExitTerminate){
             try {
-                CommandResult r = result.get();
-                completed.remove(result);
+                shutdown(false);
 
-                if (r != null) {
-
-                    print(r);
-
-                    // bail
-                    if (r.failed() || r instanceof ExitTerminate) {
-
-                        shutdown(false);
-
-                        //TODO Replace with execeptions ?
-                        if (r instanceof ExitTerminate)
-                            System.exit(r.getResultCode());
-
-                        return r.getResultCode();
-                    }
-                }
             } catch (InterruptedException ex) {
                 if (verbose){
                     ex.printStackTrace();
@@ -186,9 +179,38 @@ public class Repl {
                     ex.printStackTrace();
                 }
             }
+            if (r instanceof ExitTerminate){
+                System.exit(r.getResultCode());
+            }
         }
+    }
 
-        return 0;
+    public int processCompleted(int timeout) throws InterruptedException {
+
+        // process completed jobs
+        Future<CommandResult> result;
+        int rc = 0;
+        while ((result = poll(timeout)) != null) {
+            CommandResult r = null;
+            try {
+                r = result.get();
+                completed.remove(result);
+            } catch (InterruptedException e){
+                if (verbose){
+                    e.printStackTrace();
+                }
+            } catch (ExecutionException e){
+                if (verbose){
+                    e.printStackTrace();
+                }
+            }
+            if (r != null) {
+                print(r);
+                exitOnFailure(r);
+                rc = r.getResultCode();
+            }
+        }
+        return rc;
     }
 
     public void shutdown(boolean wait) throws InterruptedException, ExecutionException {

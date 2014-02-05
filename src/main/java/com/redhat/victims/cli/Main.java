@@ -232,12 +232,12 @@ public class Main {
 
 
         if (opts.getOption(STAT_FLAG).flagSet()){
-            repl.runCommand(LastUpdateCommand.COMMAND_NAME);
+            repl.runSynchronousCommand(LastUpdateCommand.COMMAND_NAME);
         }
 
         if (opts.getOption(SYNC_FLAG).flagSet()){
             System.out.println("Updating EVD definitions...");
-            repl.runCommand(SynchronizeCommand.COMMAND_NAME);
+            repl.runSynchronousCommand(SynchronizeCommand.COMMAND_NAME);
         }
 
         if (opts.getOption(REPL_FLAG).flagSet()){
@@ -269,6 +269,19 @@ public class Main {
                 }
             }
             System.exit(0);
+        }
+
+        if (evd != null){
+            try {
+                int records = evd.getRecordCount();
+                if (records <= 0){
+                    System.err.println("WARNING: Victims database is empty!"
+                            + " Run command again with the "
+                            + SYNC_FLAG + " flag.");
+                }
+            } catch (VictimsException e){
+                System.err.println(e.getMessage());
+            }
         }
 
         // Remaining files / directories as arguments
