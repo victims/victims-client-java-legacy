@@ -10,12 +10,12 @@ package com.redhat.victims.cli;
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * #L%
@@ -49,23 +49,23 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * This started out as a basic REPL implementation with the 
- * goal of dispatching different commands related to victims 
- * usage. The initial implementation has been perverted a 
- * little to allow for asynchronous dispatch of commands 
+ * This started out as a basic REPL implementation with the
+ * goal of dispatching different commands related to victims
+ * usage. The initial implementation has been perverted a
+ * little to allow for asynchronous dispatch of commands
  * with the aim of facilitating better performance (at the cost
- * of this mess). 
- * 
- * It uses an executor to dispatch invocations of commands 
- * and watches for task completions. 
- * 
+ * of this mess).
+ *
+ * It uses an executor to dispatch invocations of commands
+ * and watches for task completions.
+ *
  * @author gm
  */
 public class Repl {
 
     public static final String INTERACTIVE = "victims.cli.repl";
     public static final String VERBOSE = "victims.cli.verbose";
-       
+
     private String prompt;
     private BufferedReader in;
     private PrintStream out;
@@ -79,7 +79,7 @@ public class Repl {
     private ConcurrentLinkedQueue<Future<CommandResult>> completed;
 
     Repl(InputStream input, PrintStream output, String prompt) {
-        
+
         this.in = new BufferedReader(new InputStreamReader(input));
         this.out = output;
         this.prompt = prompt;
@@ -99,51 +99,51 @@ public class Repl {
         register(new MapCommand(this));
         register(new HelpCommand(this.commands));
         register(new ExitCommand());
-        
+
         shuttingDown = false;
     }
 
     Repl() {
         this(System.in, System.out, ">");
     }
-    
+
     final void register(Command cmd) {
         commands.put(cmd.getName(), cmd);
     }
-    
+
     public Future<CommandResult> poll(int timeout){
-      
+
         if (timeout < 0){
             return completor.poll();
         } else{
-            try{ 
+            try{
                 return completor.poll(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e){
                 return null;
             }
         }
     }
-    
+
     public void scheduleExecution(Command cmd){
-        completed.add(completor.submit(cmd));        
+        completed.add(completor.submit(cmd));
     }
-    
+
     public void runCommand(String commandName, String... optionalArguments){
-       
-        // TODO - Add is shutting down check?        
+
+        // TODO - Add is shutting down check?
         Command cmd = getCommand(commandName);
         if (cmd != null){
             ArrayList<String> args = new ArrayList();
             args.addAll(Arrays.asList(optionalArguments));
             cmd.setArguments(args);
-            scheduleExecution(cmd); 
+            scheduleExecution(cmd);
         }
     }
-    
+
     public int scheuduled(){
         return completed.size();
     }
-    
+
     public Command getCommand(String key){
         Command c = commands.get(key);
         if (c != null){
@@ -151,10 +151,10 @@ public class Repl {
         }
         return null;
     }
-    
+
     public int processCompleted(int timeout) throws InterruptedException {
-        
-        // process completed jobs 
+
+        // process completed jobs
         Future<CommandResult> result;
         while ((result = poll(timeout)) != null) {
             try {
@@ -167,13 +167,13 @@ public class Repl {
 
                     // bail
                     if (r.failed() || r instanceof ExitTerminate) {
-                        
+
                         shutdown(false);
-                        
+
                         //TODO Replace with execeptions ?
                         if (r instanceof ExitTerminate)
                             System.exit(r.getResultCode());
-                        
+
                         return r.getResultCode();
                     }
                 }
@@ -192,7 +192,7 @@ public class Repl {
     }
 
     public void shutdown(boolean wait) throws InterruptedException, ExecutionException {
-        
+
         shuttingDown = true;
         try {
             for (Future<CommandResult> task : completed) {
@@ -201,11 +201,11 @@ public class Repl {
                 }
                 task.cancel(true);
             }
-            
-        } catch(ConcurrentModificationException e){     
+
+        } catch(ConcurrentModificationException e){
             // more jobs were added. make sure we cancel them too.
             shutdown(wait);
-            
+
         } finally {
 
             if (executor != null) {
@@ -215,7 +215,7 @@ public class Repl {
     }
 
     private static String unquote(String s) {
-        
+
         if (s.isEmpty()) {
             return s;
         }
@@ -332,15 +332,15 @@ public class Repl {
                     Command callable = eval(input);
                     if (callable != null) {
                         scheduleExecution(callable);
-                        
+
                     }
                 }
 
-                // process completed jobs 
+                // process completed jobs
                 if ((rc = processCompleted(-1)) != 0){
                     return rc;
                 }
-               
+
             }
         } catch (IOException e) {
             out.printf("error: %s%n", e.getMessage());
