@@ -34,6 +34,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
+import com.redhat.victims.VictimsException;
 
 
 /**
@@ -219,6 +222,14 @@ public class Main {
         setConfig(repl, opts, VICTIMS_DB_DRIVER);
         setConfig(repl, opts, VICTIMS_SERVICE_URI);
         setConfig(repl, opts, VICTIMS_SERVICE_ENTRY);
+
+        VictimsDBInterface evd = null;
+        try {
+            evd = VictimsDB.db();
+        } catch (VictimsException e){
+            System.err.println(e.getMessage());
+        }
+
 
         if (opts.getOption(STAT_FLAG).flagSet()){
             repl.runCommand(LastUpdateCommand.COMMAND_NAME);
