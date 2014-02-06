@@ -309,7 +309,7 @@ public class Main {
         }
 
         try{
-            while (repl.scheuduled() > 0 ){
+            while (repl.scheduled() > 0 ){
                 repl.processCompleted(-1);
 
             }
