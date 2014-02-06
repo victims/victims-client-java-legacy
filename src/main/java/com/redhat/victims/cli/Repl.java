@@ -153,7 +153,7 @@ public class Repl {
         }
     }
 
-    public int scheuduled(){
+    public int scheduled(){
         return completed.size();
     }
 
