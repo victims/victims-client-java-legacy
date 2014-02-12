@@ -29,18 +29,21 @@ import com.redhat.victims.cli.commands.ScanFileCommand;
 import com.redhat.victims.cli.commands.SynchronizeCommand;
 import com.redhat.victims.cli.commands.PomScannerCommand;
 import com.redhat.victims.cli.commands.ScanDirCommand;
+import com.redhat.victims.cli.results.CommandResult;
+import com.redhat.victims.cli.results.ExitTerminate;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+
 import com.redhat.victims.database.VictimsDB;
 import com.redhat.victims.database.VictimsDBInterface;
 import com.redhat.victims.VictimsException;
 
 
 /**
- * A simple wrapper entry point to the REPL.
+ * A wrapper entry point to the REPL.
 
  * @author gm
  */
@@ -59,7 +62,7 @@ public class Main {
     final static Map<String, String> FLAGS;
 
     static {
-        Map<String, String> flags = new HashMap();
+        Map<String, String> flags = new HashMap<String, String>();
         flags.put(VERBOSE_FLAG,         "show verbose output");
         flags.put(HELP_FLAG,            "show this help message");
         flags.put(SYNC_FLAG,            "synchronize with the victims web service");
@@ -248,12 +251,8 @@ public class Main {
         if (opts.getOption(JAR_INFO).hasValue()){
             String val = extractValue(opts, JAR_INFO);
             if (val != null){
-                repl.runCommand(DumpCommand.COMMAND_NAME, val);
-                try {
-                    repl.shutdown(true);
-                } catch (Exception e){
-                    e.printStackTrace();
-                }
+            	repl.runSynchronousCommand(DumpCommand.COMMAND_NAME, val);
+            	repl.shutdown();
             }
             System.exit(0);
         }
@@ -261,12 +260,8 @@ public class Main {
         if (opts.getOption(COMPARE_JARS).hasValue()){
             String val = extractValue(opts, COMPARE_JARS);
             if (val != null){
-                repl.runCommand(CompareCommand.COMMAND_NAME, val);
-                try {
-                    repl.shutdown(true);
-                } catch (Exception e){
-                    e.printStackTrace();
-                }
+                repl.runSynchronousCommand(CompareCommand.COMMAND_NAME, val);
+                repl.shutdown();
             }
             System.exit(0);
         }
@@ -307,19 +302,17 @@ public class Main {
                 repl.runCommand(command, arg);
             }
         }
-
-        try{
-            while (repl.scheduled() > 0 ){
-                repl.processCompleted(-1);
-
-            }
-            repl.shutdown(true);
-
-
-        } catch (InterruptedException e){
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
+        
+        int rc = CommandResult.RESULT_SUCCESS;
+    	for (CommandResult result : repl.completedCommands()){
+			repl.print(result);
+			if (result != null && (result.failed() || result instanceof ExitTerminate)){
+				rc = result.getResultCode();
+				break;
+			} 
+		}
+    	repl.shutdown();
+    	System.exit(rc);
+    	 
     }
 }

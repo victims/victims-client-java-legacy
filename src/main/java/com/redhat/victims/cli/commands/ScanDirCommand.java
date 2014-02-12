@@ -66,22 +66,18 @@ public class ScanDirCommand implements Command  {
         @Override
         protected void handleFile(File file, int depth, Collection results) {
             try {
-                String commandName = null;
-                ArrayList<String> args = new ArrayList();
-                args.add(file.getCanonicalPath());
-                
-                if (file.getCanonicalPath().endsWith("pom.xml")) {
-                    commandName = PomScannerCommand.COMMAND_NAME;
+            	String path = file.getCanonicalPath().toLowerCase();
+                if (path.endsWith("pom.xml")) {
+                    repl.runCommand(PomScannerCommand.COMMAND_NAME, file.getCanonicalPath());
+                } else if (path.endsWith(".jar") || 
+                	path.endsWith(".ear") ||
+                	path.endsWith(".war") || 
+                	path.endsWith(".zip")){
+                    repl.runCommand(ScanFileCommand.COMMAND_NAME, file.getCanonicalPath());
                 } else {
-                    commandName = ScanFileCommand.COMMAND_NAME;
+                	// don't care.
                 }
                 
-                Command command = repl.getCommand(commandName);
-                if (command != null){
-                    command.setArguments(args);
-                    repl.scheduleExecution(command);
-                }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }

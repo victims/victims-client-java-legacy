@@ -56,21 +56,12 @@ public class MapCommand implements Command {
         }
         
         String key = args.remove(0);
-        Command cmd = repl.getCommand(key);
-        if (cmd == null){
-            return new ExitInvalid(String.format("invalid command: %s", cmd));
-        }
-        
         for (String arg : args){
-            ArrayList<String> params = new ArrayList();
-            params.add(arg);
-            cmd.setArguments(params);
-            repl.scheduleExecution(cmd);
- 
+        	repl.runCommand(key, arg);
         }
-        
+               
         ExitSuccess rc = new ExitSuccess(null);
-        rc.addVerboseOutput(String.format("Submitted %d %s tasks", args.size(), cmd.getName()));
+        rc.addVerboseOutput(String.format("Submitted %d %s tasks", args.size(), key));
         return rc;
         
     }
