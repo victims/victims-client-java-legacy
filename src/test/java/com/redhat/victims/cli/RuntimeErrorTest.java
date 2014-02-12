@@ -23,85 +23,85 @@ import com.redhat.victims.cli.commands.SynchronizeCommand;
 import com.redhat.victims.cli.results.CommandResult;
 
 class ExceptionThrowingCommand implements Command {
-	
-	public static String COMMAND_NAME = "throw-exception";
-	
-	private ArrayList<String> arguments;
 
-	@Override
-	public CommandResult call() throws Exception {
-		throw new NullPointerException("Opps.. you broke it?");	
-	}
+    public static String COMMAND_NAME = "throw-exception";
 
-	@Override
-	public String getName() {
-		return COMMAND_NAME; 
-	}
+    private ArrayList<String> arguments;
 
-	@Override
-	public void setArguments(List<String> args) {
-		if (args != null && args.size() > 0){
-			arguments.addAll(args);
-		}
-		
-	}
+    @Override
+    public CommandResult call() throws Exception {
+        throw new NullPointerException("Opps.. you broke it?");
+    }
 
-	@Override
-	public CommandResult execute(List<String> args) {
-		setArguments(args);
-		try { 
-			return this.call();
-		} catch(Exception e){
-			return null;
-		}
-		
-	}
+    @Override
+    public String getName() {
+        return COMMAND_NAME;
+    }
 
-	@Override
-	public String usage() {
-		return "throw-exception"; 
-	}
+    @Override
+    public void setArguments(List<String> args) {
+        if (args != null && args.size() > 0){
+            arguments.addAll(args);
+        }
 
-	@Override
-	public com.redhat.victims.cli.commands.Command newInstance() {
-		return new ExceptionThrowingCommand();
-	}
-	
+    }
+
+    @Override
+    public CommandResult execute(List<String> args) {
+        setArguments(args);
+        try {
+            return this.call();
+        } catch(Exception e){
+            return null;
+        }
+
+    }
+
+    @Override
+    public String usage() {
+        return "throw-exception";
+    }
+
+    @Override
+    public com.redhat.victims.cli.commands.Command newInstance() {
+        return new ExceptionThrowingCommand();
+    }
+
 }
 
 public class RuntimeErrorTest extends Main   {
 
-	@Test
-	public void testRunWithArgs() throws Exception {
-		
-		//Mimic main program.
-		System.setProperty(Repl.VERBOSE, "true");
-		Repl repl = new Repl();
-		repl.register(new ConfigureCommand());
-		repl.register(new LastUpdateCommand());
-		repl.register(new SynchronizeCommand());
-		repl.register(new ScanFileCommand());
-		repl.register(new ScanDirCommand(true, repl));
-		repl.register(new PomScannerCommand());
-		repl.register(new DumpCommand());
-		repl.register(new CompareCommand());
-		
-		// Test unexpected command failure.. 
-		repl.register(new ExceptionThrowingCommand());
+    @Test
+    public void testRunWithArgs() throws Exception {
 
-		// Long running command..
-		repl.runCommand(SynchronizeCommand.COMMAND_NAME);
-		repl.runCommand(ExceptionThrowingCommand.COMMAND_NAME);
-		
-		for (CommandResult result : repl.completedCommands()){
-			repl.print(result);
-			if (result != null && result.failed()){
-				break;
-			} 
-		}
-		repl.shutdown();
+        //Mimic main program.
+        System.setProperty(Repl.VERBOSE, "true");
+        Repl repl = new Repl();
+        repl.register(new ConfigureCommand());
+        repl.register(new LastUpdateCommand());
+        repl.register(new SynchronizeCommand());
+        repl.register(new ScanFileCommand());
+        repl.register(new ScanDirCommand(true, repl));
+        repl.register(new PomScannerCommand());
+        repl.register(new DumpCommand());
+        repl.register(new CompareCommand());
 
-	
-	}
+        // Test unexpected command failure..
+        repl.register(new ExceptionThrowingCommand());
+
+        // Long running command..
+        repl.runCommand(SynchronizeCommand.COMMAND_NAME);
+        repl.runCommand(ExceptionThrowingCommand.COMMAND_NAME);
+
+        for (CommandResult result : repl.completedCommands()){
+            repl.print(result);
+            if (result != null && result.failed()){
+                break;
+            }
+        }
+        repl.shutdown();
+
+
+    }
 
 }

@@ -11,12 +11,12 @@ package com.redhat.victims.cli.commands;
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * #L%
@@ -43,12 +43,12 @@ public class ScanDirCommand implements Command  {
     private List<String> arguments;
     private boolean recursiveMode;
     protected Repl repl;
-            
+
     class DirectoryScanner extends DirectoryWalker {
-        
-        private Repl repl; 
-        private boolean recursive; 
-        
+
+        private Repl repl;
+        private boolean recursive;
+
         public DirectoryScanner(boolean recursive, Repl repl){
             super();
             this.repl = repl;
@@ -66,29 +66,29 @@ public class ScanDirCommand implements Command  {
         @Override
         protected void handleFile(File file, int depth, Collection results) {
             try {
-            	String path = file.getCanonicalPath().toLowerCase();
+                String path = file.getCanonicalPath().toLowerCase();
                 if (path.endsWith("pom.xml")) {
                     repl.runCommand(PomScannerCommand.COMMAND_NAME, file.getCanonicalPath());
-                } else if (path.endsWith(".jar") || 
-                	path.endsWith(".ear") ||
-                	path.endsWith(".war") || 
-                	path.endsWith(".zip")){
+                } else if (path.endsWith(".jar") ||
+                    path.endsWith(".ear") ||
+                    path.endsWith(".war") ||
+                    path.endsWith(".zip")){
                     repl.runCommand(ScanFileCommand.COMMAND_NAME, file.getCanonicalPath());
                 } else {
-                	// don't care.
+                    // don't care.
                 }
-                
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        
+
         public void scan(String filename) throws IOException {
             walk(new File(filename), null);
         }
 
     }
-    
+
     public ScanDirCommand(boolean recursive, Repl dispatch){
         help = new Usage(getName(), "Scans the supplied directory for .jar files and reports any vulnerabilities found");
         help.addExample("/usr/share/java");
@@ -96,7 +96,7 @@ public class ScanDirCommand implements Command  {
         repl = dispatch;
 
     }
-    
+
     @Override
     public final String getName() {
         return COMMAND_NAME;
@@ -109,19 +109,19 @@ public class ScanDirCommand implements Command  {
 
     @Override
     public CommandResult execute(List<String> args) {
-        
+
         CommandResult result = new ExitSuccess(null);
         DirectoryScanner scanner = new DirectoryScanner(recursiveMode, repl);
         for (String arg : args){
-            try{ 
+            try{
                 // dispatched and reported asynchronously
                 scanner.scan(arg);
             } catch(IOException e){
                 result.addVerboseOutput(String.format("error: (%s) - %s", arg, e.toString()));
             }
-            
+
         }
-        
+
         return result;
     }
 
@@ -139,5 +139,5 @@ public class ScanDirCommand implements Command  {
     public CommandResult call() throws Exception {
         return execute(this.arguments);
     }
-    
+
 }

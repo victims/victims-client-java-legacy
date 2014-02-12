@@ -251,8 +251,8 @@ public class Main {
         if (opts.getOption(JAR_INFO).hasValue()){
             String val = extractValue(opts, JAR_INFO);
             if (val != null){
-            	repl.runSynchronousCommand(DumpCommand.COMMAND_NAME, val);
-            	repl.shutdown();
+                repl.runSynchronousCommand(DumpCommand.COMMAND_NAME, val);
+                repl.shutdown();
             }
             System.exit(0);
         }
@@ -302,17 +302,17 @@ public class Main {
                 repl.runCommand(command, arg);
             }
         }
-        
+
         int rc = CommandResult.RESULT_SUCCESS;
-    	for (CommandResult result : repl.completedCommands()){
-			repl.print(result);
-			if (result != null && (result.failed() || result instanceof ExitTerminate)){
-				rc = result.getResultCode();
-				break;
-			} 
-		}
-    	repl.shutdown();
-    	System.exit(rc);
-    	 
+        for (CommandResult result : repl.completedCommands()){
+            repl.print(result);
+            if (result != null && (result.failed() || result instanceof ExitTerminate)){
+                rc = result.getResultCode();
+                break;
+            }
+        }
+        repl.shutdown();
+        System.exit(rc);
+
     }
 }
