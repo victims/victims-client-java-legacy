@@ -24,6 +24,8 @@ package com.redhat.victims.cli.commands;
 import com.redhat.victims.VictimsRecord;
 import com.redhat.victims.VictimsScanner;
 import com.redhat.victims.cli.results.CommandResult;
+import com.redhat.victims.cli.results.ExitFailure;
+import com.redhat.victims.cli.results.ExitInvalid;
 import com.redhat.victims.cli.results.ExitSuccess;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,36 +61,34 @@ public class CompareCommand implements Command {
     public CommandResult execute(List<String> args) {
         
         CommandResult result = new ExitSuccess(null);
-        
-        for (String arg : args) {
-            try {
-                // Split argument string based on delimiter
-                String[] jars = arg.split(",", 2);
-
-                VictimsRecord vr1 = null;
-                VictimsRecord vr2 = null;
-
-                ArrayList<VictimsRecord> records = new ArrayList();
-                VictimsScanner.scan(jars[0], records);
-                for (VictimsRecord record : records){
-                    vr1 = record;
-                }
-
-                VictimsScanner.scan(jars[1], records); 
-                for (VictimsRecord record : records){
-                    vr2 = record;
-                }
-
-                // Perform the comparison using .equals
-                if (vr1.equals(vr2)){
-                    result.addOutput("SUCCESS: " + jars[0] + " matches the hashed contents of " + jars[1]);
-                } else {
-                    result.addOutput("FAILURE: " + jars[0] + " does not match the hashed contents of " + jars[1]);
-                }
-            } catch (IOException e){
-                result.addOutput(e.toString());
-            }
+        if (args.size() != 2){
+            return new ExitInvalid("Two jars are required to do comparisson");
         }
+        
+        String lhs = args.get(0);
+        String rhs = args.get(1);
+        
+        ArrayList<VictimsRecord> lhsRecords = new ArrayList<VictimsRecord>();
+        ArrayList<VictimsRecord> rhsRecords = new ArrayList<VictimsRecord>();
+        try {
+        
+            VictimsScanner.scan(lhs, lhsRecords);
+            VictimsScanner.scan(rhs,  rhsRecords);
+            for (VictimsRecord lhsRecord : lhsRecords){
+                for (VictimsRecord rhsRecord : rhsRecords){
+                    if (lhsRecord.equals(rhsRecord)){
+                        result.addOutput(String.format("SUCCESS: %s matches the hashed contents of %s", lhs, rhs));   
+                        return result;
+                    }
+                }
+            }
+            
+            result.addOutput(String.format("FAILURE: %s does not match the hashed contents of %s", lhs, rhs));
+            
+        } catch (IOException e){
+            return new ExitFailure(e.toString());  
+        }
+         
         return result;
     }
 
