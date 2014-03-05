@@ -42,7 +42,7 @@ public class CompareCommand implements Command {
     
     public CompareCommand(){
         help = new Usage(getName(), "Compare the hashes of two jar files");
-        help.addExample("file1.jar,file2.jar");       
+        help.addExample("file1.jar file2.jar");       
     }
     
     @Override

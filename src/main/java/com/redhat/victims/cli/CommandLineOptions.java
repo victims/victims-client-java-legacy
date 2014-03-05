@@ -39,28 +39,30 @@ class CommandLineOption<T> {
     final private T defaultValue;
     final private String description;
     final private boolean required;
-    final private boolean argumentExpected;
     final private boolean flag;
-    final private Class type;
-    private T value;
+    final private Class<T> type;
+    //private T value;
+    private ArrayList<T> values;
+    private int numberOfArgumentsExpected;
     private boolean valueSet;
 
     CommandLineOption(String name, String description, 
             boolean required, 
-            boolean expectsArgument,
+            int argumentsExpected,
             boolean isFlag, 
             T defaultValue, 
-            Class type){
+            Class<T> type){
         
         this.name = name;
-        this.value = defaultValue;          // set default 
         this.defaultValue = defaultValue;   // save default
         this.description = description;
         this.required = required;
-        this.argumentExpected = expectsArgument;
+        this.numberOfArgumentsExpected = argumentsExpected;
         this.flag = isFlag;
         this.valueSet = false;
         this.type = type;
+
+        reset();
     }
     
     String getName(){
@@ -68,14 +70,21 @@ class CommandLineOption<T> {
     }
     
     T getValue(){
-        return value;
+        return getValueAt(0);
+    }
+
+    T getValueAt(int index){
+        if (this.values == null || this.values.isEmpty()){
+            return null;
+        }
+        return this.values.get(index);
     }
     
     boolean flagSet(){
         return this.flag && this.valueSet;
     }
     
-    Class getValueType(){
+    Class<T> getValueType(){
         return this.type;
     }
     
@@ -84,9 +93,23 @@ class CommandLineOption<T> {
             this.valueSet = true;
     }   
     
-    void setValue(T value){
-       this.valueSet = true;
-       this.value = value;
+    void setValue(T value, T...values){
+        this.valueSet = true;
+        if (this.values == null){
+            this.values = new ArrayList<T>();
+        }
+        this.values.add(value);
+        for (T val : values){
+            this.values.add(val);
+        }
+    }
+    
+    void addValue(T arg){
+        this.valueSet = true;
+        if (this.values == null){
+            this.values = new ArrayList<T>();
+        }
+        this.values.add(arg);
     }
     
     String getDescription(){
@@ -137,16 +160,28 @@ class CommandLineOption<T> {
     }
     
     boolean hasValue(){
-        return this.value != null || this.valueSet ;
+        return (this.values != null
+                && this.values.size() > 0 )
+                || this.valueSet;
+        //return this.value != null || this.valueSet ;
     }
     
     boolean expectsArgument(){
-        return argumentExpected;
+        return numberOfArgumentsExpected > 0;
+        //return argumentExpected;
+    }
+    
+    int expectedArgumentCount(){
+        return numberOfArgumentsExpected;
     }
     
     void reset(){
         this.valueSet = false;
-        this.value = this.defaultValue;
+        this.values = new ArrayList<T>();
+        if (this.defaultValue != null){
+            this.valueSet = true;
+            this.values.add(this.defaultValue);
+        }
     }
     
 }
@@ -197,6 +232,22 @@ public class CommandLineOptions {
             opt.reset();
         }
     }
+    private boolean addValueToOption(CommandLineOption opt, String val){
+
+        Class cls = opt.getValueType();
+        try { 
+            if (cls == Boolean.class)
+                opt.addValue(Boolean.parseBoolean(val));
+            else if (cls == Integer.class)
+                opt.addValue(Integer.parseInt(val));
+            else 
+                opt.addValue(val);
+        }  catch (NumberFormatException e){
+            errors.add(String.format("%s number expected: %s", opt.getName(), val));
+            return false;
+        }
+        return true;    
+    }
     
     boolean parse(String[] argv){
     
@@ -241,27 +292,29 @@ public class CommandLineOptions {
                     opt.setFlag();
                     
                 } else  if (opt.expectsArgument() && argp+1 >= argc && value == null){
-                    errors.add(String.format("%s requires an argument", opt.getName()));
+                    errors.add(String.format("%s requires additional arguments", opt.getName()));
                     return false;
-                    
+                
+                } else if (value != null){
+                    if (! addValueToOption(opt, value)){
+                        return false;
+                    }
+                        
                 } else {
                     argp++;
-                    
-                    if (value == null){
-                        value = argv[argp];
+                    int processed = 0; 
+                    while (processed < opt.expectedArgumentCount() && argp < argc){
+                        String arg = argv[argp++];
+                        if (arg.startsWith("-")){
+                            break;
+                        }
+                        if (! addValueToOption(opt, arg)){
+                            return false;
+                        }
+                        processed++;  
                     }
-                    
-                    Class cls = opt.getValueType();
-                    try { 
-                        if (cls == Boolean.class)
-                            opt.setValue(Boolean.parseBoolean(value));
-                        else if (cls == Integer.class)
-                            opt.setValue(Integer.parseInt(value));
-                        else 
-                            opt.setValue(value);
-                        
-                    } catch (NumberFormatException e){
-                        errors.add(String.format("%s number expected: %s", opt.getName(), value));
+                    if (processed != opt.expectedArgumentCount()){
+                        errors.add(String.format("%s expects %d arguments", opt.getName(), opt.expectedArgumentCount()));
                         return false;
                     }
                 }

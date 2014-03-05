@@ -30,14 +30,15 @@ public class CommandLineOptionsTest {
     
         CommandLineOptions opts = new CommandLineOptions("victims-client");
         opts.addOption(
-            new CommandLineOption<Boolean>("-debug", "show debug output", false, false, true, null, Boolean.class));
+            new CommandLineOption<Boolean>("-debug", "show debug output", false, 0, true, null, Boolean.class));
         opts.addOption(
-            new CommandLineOption<Boolean>("-help", "show this help message", false, false, true, null, Boolean.class));
+            new CommandLineOption<Boolean>("-help", "show this help message", false, 0, true, null, Boolean.class));
         opts.addOption(
-            new CommandLineOption<Integer>("-count", "example integer", false, true, false, null, Integer.class));
+            new CommandLineOption<Integer>("-count", "example integer", false, 1, false, null, Integer.class));
         opts.addOption(
-            new CommandLineOption<String>("-key", "example kv entry", false, true, false, null, String.class)
-        );
+            new CommandLineOption<String>("-key", "example kv entry", false, 1, false, null, String.class));
+        opts.addOption(
+                new CommandLineOption<String>("-multi", "example multiple arguments", false, 2, false, null, String.class));
         
         // Empty arguments
         String[] emptyArguments = {};
@@ -54,7 +55,6 @@ public class CommandLineOptionsTest {
         String[] helpArgument = {"-help"};
         assertTrue(opts.parse(helpArgument));
         CommandLineOption opt = opts.getOptions().get("-help");
-        opt.hasValue();
         assertTrue(opts.getOptions().get("-help").hasValue());
         opts.reset();
         assertTrue(! opts.getOptions().get("-help").hasValue());
@@ -62,7 +62,6 @@ public class CommandLineOptionsTest {
         // Test invalid arguments
         String[] invalidArgument  = { "-count", "foo" };
         assertTrue(! opts.parse(invalidArgument));
-        System.out.println(opts.getUsage());
         opts.reset();
         
         // Test key -> value entry
@@ -70,16 +69,21 @@ public class CommandLineOptionsTest {
         assertTrue(opts.parse(keyValueArgument));
         assertTrue(opts.getOptions().get("-key").getValue().equals("value"));
         
-   
+        // Test multiple arguments 
+        String[] multipleArguments = {"-multi", "foo", "bar" };
+        String[] multipleButNotEnough = { "-multi", "foo" };
+        
+        assertTrue(opts.parse(multipleArguments));
+        opts.reset();
+        assertTrue(!opts.parse(multipleButNotEnough));
+        
         // Test missing required 
         opts.addOption(
-                new CommandLineOption<String>("-foo", "example foo", true, true, false, null, String.class ));
+                new CommandLineOption<String>("-foo", "example foo", true, 1, false, null, String.class ));
         assertTrue(! opts.parse(emptyArguments));
-        System.out.println(opts.getUsage());
         
         String[] requiredArgument = { "-foo", "bar" };
         opts.reset();
-        
         
         assertTrue(opts.parse(requiredArgument));
         

@@ -180,12 +180,18 @@ public class Main {
 
         for (String key : FLAGS.keySet()){
             opts.addOption(new CommandLineOption<Boolean>(key, FLAGS.get(key),
-                    false, false, true, null, Boolean.class));
+                    false, 0, true, null, Boolean.class));
         }
 
         for (String key : OPTIONS.keySet()){
+            
+            int nargs = 1;
+            if (key.equals(COMPARE_JARS)){
+                nargs = 2;
+            }
             opts.addOption(new CommandLineOption<String>(key, OPTIONS.get(key),
-                    false, true, false, null, String.class));
+                    false, nargs, false, null, String.class));
+            
         }
 
         if (args.length == 0 || ! opts.parse(args)){
@@ -258,11 +264,10 @@ public class Main {
         }
 
         if (opts.getOption(COMPARE_JARS).hasValue()){
-            String val = extractValue(opts, COMPARE_JARS);
-            if (val != null){
-                repl.runSynchronousCommand(CompareCommand.COMMAND_NAME, val);
-                repl.shutdown();
-            }
+            CommandLineOption<String> opt = opts.getOption(COMPARE_JARS);
+            repl.runSynchronousCommand(CompareCommand.COMMAND_NAME, 
+                    opt.getValueAt(0), opt.getValueAt(1));
+            repl.shutdown();
             System.exit(0);
         }
 
