@@ -91,7 +91,7 @@ public class Main {
     static {
         Map<String, String> tmp = new HashMap();
         tmp.put(JAR_INFO,               "displays fingerprint information of the supplied jar file");
-        tmp.put(COMPARE_JARS,           "compare the hashes of two jar files. Specify the jar files with , as a delimiter, i.e. file1.jar,file2.jar");
+        tmp.put(COMPARE_JARS,           "compare the hashes of two jar files. Specify the jar files with space as a delimiter, i.e. file1.jar file2.jar");
         tmp.put(VICTIMS_HOME,           "set the directory where victims data should be stored");
         tmp.put(VICTIMS_DB_USER,        "set the user to connect to the victims database");
         tmp.put(VICTIMS_DB_PASS,        "set the password to use to connect to the victims database");
