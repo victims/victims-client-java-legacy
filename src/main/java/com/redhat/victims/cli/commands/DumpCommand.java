@@ -64,9 +64,15 @@ public class DumpCommand implements Command {
             try { 
                 ArrayList<VictimsRecord> records = new ArrayList();
                 VictimsScanner.scan(arg, records);
-                for (VictimsRecord record : records){
-                    result.addOutput(record.toString());
-                }             
+                result.addOutput("[");
+                for (int i = 0; i < records.size(); ++i){
+                	result.addOutput(records.get(i).toString());
+                	if (records.size() > 1 && i < records.size() -1){
+                		result.addOutput(",");
+                	}
+                }
+                result.addOutput("]");
+                        
             } catch (IOException e){
                 result.addOutput(e.toString());
             }

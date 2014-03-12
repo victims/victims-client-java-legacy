@@ -27,8 +27,11 @@ import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.results.ExitFailure;
 import com.redhat.victims.cli.results.ExitInvalid;
 import com.redhat.victims.cli.results.ExitSuccess;
+import com.redhat.victims.fingerprint.Algorithms;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -73,23 +76,52 @@ public class CompareCommand implements Command {
         try {
         
             VictimsScanner.scan(lhs, lhsRecords);
-            VictimsScanner.scan(rhs,  rhsRecords);
-            for (VictimsRecord lhsRecord : lhsRecords){
-                for (VictimsRecord rhsRecord : rhsRecords){
-                    if (lhsRecord.equals(rhsRecord)){
-                        result.addOutput(String.format("SUCCESS: %s matches the hashed contents of %s", lhs, rhs));   
-                        return result;
-                    }
-                }
+            VictimsScanner.scan(rhs, rhsRecords);
+          
+            if (lhsRecords.containsAll(rhsRecords)){
+                result.addOutput(String.format("EQUAL: %s equals the hashed contents of %s", lhs, rhs));   
+                return result; 	
+            } 
+
+            HashSet<String> lhsHashes;
+            HashSet<String> rhsHashes;
+
+            lhsHashes = new HashSet<String>();
+            for (VictimsRecord rec : lhsRecords){
+                lhsHashes.addAll(rec.getHashes(Algorithms.SHA512).keySet());
             }
-            
-            result.addOutput(String.format("FAILURE: %s does not match the hashed contents of %s", lhs, rhs));
+
+            rhsHashes = new HashSet<String>(); 
+            for (VictimsRecord rec : rhsRecords){
+                rhsHashes.addAll(rec.getHashes(Algorithms.SHA512).keySet());
+            }
+
+            int lhsSize = lhsHashes.size();
+            int rhsSize = rhsHashes.size();
+            if (rhsSize > lhsSize){
+                result.addOutput(String.format("%s has %d more entries than %s%n", rhs, rhsSize-lhsSize, lhs));
+                lhsHashes.removeAll(rhsHashes);
+                if (lhsHashes.isEmpty()){
+                    result.addOutput(String.format("SUBSET: %s is a subset of the hashed contents of %s", lhs, rhs));
+                } else {
+                    result.addOutput(String.format("FAILURE %s has %d classes in common with %s.", lhs, lhsSize - lhsHashes.size(), rhs));
+                }
+                // TODO Verbose output listing the differences
+            } else {
+                result.addOutput(String.format("%s has %d more entries than %s%n", lhs, lhsSize-rhsSize, rhs));
+                rhsHashes.removeAll(lhsHashes);
+                if (rhsHashes.isEmpty()){
+                    result.addOutput(String.format("SUBSET: %s is a subset of the hashed contents of %s", rhs, lhs));
+                } else {
+                    result.addOutput(String.format("FAILURE: %s has %d classes in common with %s.", rhs, rhsSize - rhsHashes.size(), lhs));
+                }
+                // TODO Verbose output listing the differences
+            }
+            return result; 	
             
         } catch (IOException e){
             return new ExitFailure(e.toString());  
         }
-         
-        return result;
     }
 
     @Override
