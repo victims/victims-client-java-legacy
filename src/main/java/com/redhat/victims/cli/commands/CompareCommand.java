@@ -21,124 +21,114 @@ package com.redhat.victims.cli.commands;
  * #L%
  */
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.redhat.victims.VictimsRecord;
 import com.redhat.victims.VictimsScanner;
 import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.results.ExitFailure;
 import com.redhat.victims.cli.results.ExitInvalid;
 import com.redhat.victims.cli.results.ExitSuccess;
-import com.redhat.victims.fingerprint.Algorithms;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 
 /**
- *
+ * 
  * @author dfj
  */
 public class CompareCommand implements Command {
 
-    public static final String COMMAND_NAME = "compare";
-    
-    private Usage help;
-    private List<String> arguments; 
-    
-    public CompareCommand(){
-        help = new Usage(getName(), "Compare the hashes of two jar files");
-        help.addExample("file1.jar file2.jar");       
-    }
-    
-    @Override
-    public final String getName() {
-        return COMMAND_NAME;
-    }
+	public static final String COMMAND_NAME = "compare";
 
-    @Override
-    public void setArguments(List<String> args) {
-        this.arguments = args;
-    }
+	private final Usage help;
+	private List<String> arguments;
 
-    @Override
-    public CommandResult execute(List<String> args) {
-        
-        CommandResult result = new ExitSuccess(null);
-        if (args.size() != 2){
-            return new ExitInvalid("Two jars are required to do comparisson");
-        }
-        
-        String lhs = args.get(0);
-        String rhs = args.get(1);
-        
-        ArrayList<VictimsRecord> lhsRecords = new ArrayList<VictimsRecord>();
-        ArrayList<VictimsRecord> rhsRecords = new ArrayList<VictimsRecord>();
-        try {
-        
-            VictimsScanner.scan(lhs, lhsRecords);
-            VictimsScanner.scan(rhs, rhsRecords);
-          
-            if (lhsRecords.containsAll(rhsRecords)){
-                result.addOutput(String.format("EQUAL: %s equals the hashed contents of %s", lhs, rhs));   
-                return result; 	
-            } 
+	public CompareCommand() {
+		help = new Usage(getName(), "Compare the hashes of two jar files");
+		help.addExample("file1.jar file2.jar");
+	}
 
-            HashSet<String> lhsHashes;
-            HashSet<String> rhsHashes;
+	@Override
+	public final String getName() {
+		return COMMAND_NAME;
+	}
 
-            lhsHashes = new HashSet<String>();
-            for (VictimsRecord rec : lhsRecords){
-                lhsHashes.addAll(rec.getHashes(Algorithms.SHA512).keySet());
-            }
+	@Override
+	public void setArguments(List<String> args) {
+		this.arguments = args;
+	}
 
-            rhsHashes = new HashSet<String>(); 
-            for (VictimsRecord rec : rhsRecords){
-                rhsHashes.addAll(rec.getHashes(Algorithms.SHA512).keySet());
-            }
+	@Override
+	public CommandResult execute(List<String> args) {
 
-            int lhsSize = lhsHashes.size();
-            int rhsSize = rhsHashes.size();
-            if (rhsSize > lhsSize){
-                result.addOutput(String.format("%s has %d more entries than %s%n", rhs, rhsSize-lhsSize, lhs));
-                lhsHashes.removeAll(rhsHashes);
-                if (lhsHashes.isEmpty()){
-                    result.addOutput(String.format("SUBSET: %s is a subset of the hashed contents of %s", lhs, rhs));
-                } else {
-                    result.addOutput(String.format("FAILURE %s has %d classes in common with %s.", lhs, lhsSize - lhsHashes.size(), rhs));
-                }
-                // TODO Verbose output listing the differences
-            } else {
-                result.addOutput(String.format("%s has %d more entries than %s%n", lhs, lhsSize-rhsSize, rhs));
-                rhsHashes.removeAll(lhsHashes);
-                if (rhsHashes.isEmpty()){
-                    result.addOutput(String.format("SUBSET: %s is a subset of the hashed contents of %s", rhs, lhs));
-                } else {
-                    result.addOutput(String.format("FAILURE: %s has %d classes in common with %s.", rhs, rhsSize - rhsHashes.size(), lhs));
-                }
-                // TODO Verbose output listing the differences
-            }
-            return result; 	
-            
-        } catch (IOException e){
-            return new ExitFailure(e.toString());  
-        }
-    }
+		CommandResult result = new ExitSuccess(null);
+		if (args.size() != 2) {
+			return new ExitInvalid("Two jars are required to do comparisson");
+		}
 
-    @Override
-    public String usage() {
-        return help.toString();
-    }
+		String lhs = args.get(0);
+		String rhs = args.get(1);
 
-    @Override
-    public Command newInstance() {
-        CompareCommand cmd = new CompareCommand();
-        cmd.setArguments(this.arguments);
-        return cmd;
-    }
+		try {
 
-    @Override
-    public CommandResult call() throws Exception {
-        return execute(this.arguments);
-    }
-    
+			ArrayList<VictimsRecord> lhsRecords = VictimsScanner
+					.getRecords(lhs);
+			ArrayList<VictimsRecord> rhsRecords = VictimsScanner
+					.getRecords(rhs);
+
+			Integer lcount = 0;
+			Integer rcount = 0;
+
+			for (VictimsRecord vrl : lhsRecords) {
+				for (VictimsRecord vrr : rhsRecords) {
+					if (vrl.containsAll(vrr)) {
+						lcount += 1;
+					}
+
+					if (vrr.containsAll(vrl)) {
+						rcount += 1;
+					}
+				}
+			}
+
+			boolean lr = lcount.equals(rhsRecords.size());
+			boolean rl = rcount.equals(lhsRecords.size());
+
+			if (lr && rl) {
+				result.addOutput("IDENT: Both files have identical content");
+			} else {
+				String format = "SUBSET: %s contains %s";
+				if (lr) {
+					result.addOutput(String.format(format, lhs, rhs));
+				} else if (rl) {
+					result.addOutput(String.format(format, rhs, lhs));
+				} else {
+					result.addOutput("NO MATCH: No content match");
+				}
+			}
+
+			return result;
+
+		} catch (IOException e) {
+			return new ExitFailure(e.toString());
+		}
+	}
+
+	@Override
+	public String usage() {
+		return help.toString();
+	}
+
+	@Override
+	public Command newInstance() {
+		CompareCommand cmd = new CompareCommand();
+		cmd.setArguments(this.arguments);
+		return cmd;
+	}
+
+	@Override
+	public CommandResult call() throws Exception {
+		return execute(this.arguments);
+	}
+
 }
