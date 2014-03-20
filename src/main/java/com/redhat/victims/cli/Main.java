@@ -29,6 +29,7 @@ import com.redhat.victims.cli.commands.ScanFileCommand;
 import com.redhat.victims.cli.commands.SynchronizeCommand;
 import com.redhat.victims.cli.commands.PomScannerCommand;
 import com.redhat.victims.cli.commands.ScanDirCommand;
+import com.redhat.victims.cli.commands.VersionCommand;
 import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.results.ExitTerminate;
 
@@ -50,6 +51,7 @@ import com.redhat.victims.VictimsException;
 public class Main {
 
     // Flags
+    static final String VERSION_FLAG            = "--version";
     static final String VERBOSE_FLAG            = "--verbose";
     static final String HELP_FLAG               = "--help";
     static final String SYNC_FLAG               = "--update";
@@ -63,6 +65,7 @@ public class Main {
 
     static {
         Map<String, String> flags = new HashMap<String, String>();
+        flags.put(VERSION_FLAG,         "show client version");
         flags.put(VERBOSE_FLAG,         "show verbose output");
         flags.put(HELP_FLAG,            "show this help message");
         flags.put(SYNC_FLAG,            "synchronize with the victims web service");
@@ -216,6 +219,7 @@ public class Main {
         repl.register(new PomScannerCommand());
         repl.register(new DumpCommand());
         repl.register(new CompareCommand());
+        repl.register(new VersionCommand());
 
         // Handle triggered flags
         if (opts.getOption(HELP_FLAG).flagSet()){
@@ -239,6 +243,11 @@ public class Main {
             System.err.println(e.getMessage());
         }
 
+        if (opts.getOption(VERSION_FLAG).flagSet()){
+            repl.runSynchronousCommand(VersionCommand.COMMAND_NAME);
+            repl.shutdown();
+            System.exit(0);
+        }
 
         if (opts.getOption(STAT_FLAG).flagSet()){
             repl.runSynchronousCommand(LastUpdateCommand.COMMAND_NAME);
