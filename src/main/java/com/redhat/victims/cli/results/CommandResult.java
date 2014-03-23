@@ -34,8 +34,8 @@ public class CommandResult {
     public static final int RESULT_UNKNOWN = -1;
     
     private int rc; 
-    private StringBuilder output;
-    private StringBuilder verbose;
+    private final StringBuilder output;
+    private final StringBuilder verbose;
     
     public CommandResult(){
         rc = RESULT_UNKNOWN;
@@ -83,7 +83,6 @@ public class CommandResult {
     
     public void addOutput(String data){
         output.append(data);
-        verbose.append(data);
     }
     public void addVerboseOutput(String data){
         verbose.append(data);

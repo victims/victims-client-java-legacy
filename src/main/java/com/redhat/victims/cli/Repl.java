@@ -379,11 +379,10 @@ public class Repl {
             return;
         }
 
+        out.println(r.getOutput());
+
         if (verbose && r.getVerboseOutput() != null) {
             out.println(r.getVerboseOutput());
-
-        } else {
-            out.println(r.getOutput());
         }
 
     }
