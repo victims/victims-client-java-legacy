@@ -45,7 +45,7 @@ public class CommandResult {
     public CommandResult(int returnCode, String stdout){
       this();
       if (stdout != null)
-        output.append(stdout);
+        addOutput(stdout);
       rc = returnCode;
     }
     
