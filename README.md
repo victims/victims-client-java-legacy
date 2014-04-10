@@ -84,3 +84,18 @@ OPTIONS:
 
 ```
 
+## Proxies
+
+Because this client requires access to the web, if your network requires
+a proxy you must remember to set it via the [standard JVM arguments](http://stackoverflow.com/questions/120797/how-do-i-set-the-proxy-to-be-used-by-the-jvm).  A sample configuration might be:
+
+```
+-Dhttp.proxyHost=proxy.company.com
+-Dhttp.proxyPort=80
+-Dhttp.proxyUser=bob
+-Dhttp.proxyPassword=secret
+```
+
+These settings can be provided on the command line when running the stand-alone JAR; when running tests via maven, it is advisable to export these settings in $JAVA_OPTS which will be picked up by the JVM that maven invokes.
+
+
