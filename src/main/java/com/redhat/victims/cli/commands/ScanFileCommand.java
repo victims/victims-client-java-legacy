@@ -67,9 +67,10 @@ public class ScanFileCommand implements Command {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
             InputStream is = new FileInputStream(new File(filename));
-            byte[] buffer = new byte[1024];
-            while (is.read(buffer) > 0) {
-                md.update(buffer);
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = is.read(buffer)) > 0) {
+                md.update(buffer, 0, count);
             }
 
             byte[] digest = md.digest();
