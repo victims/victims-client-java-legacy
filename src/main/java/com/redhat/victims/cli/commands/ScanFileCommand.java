@@ -55,12 +55,12 @@ public class ScanFileCommand implements Command {
     private List<String> arguments;
 
     public ScanFileCommand() {
-        help = new Usage(getName(), "Scans the supplied .jar file and reports any vulnerabilities");
-        help.addExample("path/to/file.jar");
-        db = null;
+        this(null, null);
     }
 
     public ScanFileCommand(VictimsDBInterface database, VictimsResultCache resultCache){
+        help = new Usage(getName(), "Scans the supplied .jar file and reports any vulnerabilities");
+        help.addExample("path/to/file.jar");
         db = database;
         cache = resultCache;
     }
