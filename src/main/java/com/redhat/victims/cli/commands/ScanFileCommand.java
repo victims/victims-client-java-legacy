@@ -48,13 +48,21 @@ import java.util.List;
 public class ScanFileCommand implements Command {
 
     public static final String COMMAND_NAME = "scan-file";
-    
+
+    private VictimsDBInterface db;
+    private VictimsResultCache cache;
     private Usage help;
     private List<String> arguments;
 
     public ScanFileCommand() {
         help = new Usage(getName(), "Scans the supplied .jar file and reports any vulnerabilities");
         help.addExample("path/to/file.jar");
+        db = null;
+    }
+
+    public ScanFileCommand(VictimsDBInterface database, VictimsResultCache resultCache){
+        db = database;
+        cache = resultCache;
     }
 
     @Override
@@ -85,6 +93,20 @@ public class ScanFileCommand implements Command {
 
     }
 
+    private VictimsDBInterface getDatabase() throws VictimsException {
+        if (db == null) {
+            db = VictimsDB.db();
+        }
+        return db;
+    }
+
+    private VictimsResultCache getCache() throws VictimsException {
+        if (cache == null){
+            cache = new VictimsResultCache();
+        }
+        return cache;
+    }
+
     @Override
     public CommandResult execute(List<String> args) {
 
@@ -92,12 +114,9 @@ public class ScanFileCommand implements Command {
             return new ExitInvalid("file or directory expected");
         }
 
-        VictimsDBInterface db;
-        VictimsResultCache cache;
-
         try {
-            db = VictimsDB.db();
-            cache = new VictimsResultCache();
+            getDatabase();
+            getCache();
 
         } catch (VictimsException e) {
             //e.printStackTrace();
@@ -188,7 +207,7 @@ public class ScanFileCommand implements Command {
 
     @Override
     public Command newInstance() {
-        return new ScanFileCommand();
+        return new ScanFileCommand(db, cache);
     }
 
 }

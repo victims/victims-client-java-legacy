@@ -21,26 +21,18 @@ package com.redhat.victims.cli;
  * #L%
  */
 
-import com.redhat.victims.cli.commands.LastUpdateCommand;
-import com.redhat.victims.cli.commands.ConfigureCommand;
-import com.redhat.victims.cli.commands.DumpCommand;
-import com.redhat.victims.cli.commands.CompareCommand;
-import com.redhat.victims.cli.commands.ScanFileCommand;
-import com.redhat.victims.cli.commands.SynchronizeCommand;
-import com.redhat.victims.cli.commands.PomScannerCommand;
-import com.redhat.victims.cli.commands.ScanDirCommand;
-import com.redhat.victims.cli.commands.VersionCommand;
+import com.redhat.victims.VictimsException;
+import com.redhat.victims.VictimsResultCache;
+import com.redhat.victims.cli.commands.*;
 import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.results.ExitTerminate;
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
-import com.redhat.victims.VictimsException;
 
 
 /**
@@ -210,11 +202,20 @@ public class Main {
             System.setProperty(Repl.VERBOSE, "true");
         }
 
+        VictimsDBInterface evd = null;
+        VictimsResultCache cache = null;
+        try {
+            evd = VictimsDB.db();
+            cache = new VictimsResultCache();
+        } catch (VictimsException e){
+            System.err.println(e.getMessage());
+        }
+
         Repl repl = new Repl();
         repl.register(new ConfigureCommand());
         repl.register(new LastUpdateCommand());
         repl.register(new SynchronizeCommand());
-        repl.register(new ScanFileCommand());
+        repl.register(new ScanFileCommand(evd, cache));
         repl.register(new ScanDirCommand(opts.getOption(RECUR_FLAG).flagSet(), repl));
         repl.register(new PomScannerCommand());
         repl.register(new DumpCommand());
@@ -236,12 +237,7 @@ public class Main {
         setConfig(repl, opts, VICTIMS_SERVICE_URI);
         setConfig(repl, opts, VICTIMS_SERVICE_ENTRY);
 
-        VictimsDBInterface evd = null;
-        try {
-            evd = VictimsDB.db();
-        } catch (VictimsException e){
-            System.err.println(e.getMessage());
-        }
+
 
         if (opts.getOption(VERSION_FLAG).flagSet()){
             repl.runSynchronousCommand(VersionCommand.COMMAND_NAME);
