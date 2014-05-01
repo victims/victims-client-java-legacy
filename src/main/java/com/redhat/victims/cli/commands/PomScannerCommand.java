@@ -23,6 +23,7 @@ package com.redhat.victims.cli.commands;
  */
 
 import com.redhat.victims.VictimsException;
+import com.redhat.victims.cli.Environment;
 import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.database.VictimsDB;
 import com.redhat.victims.database.VictimsDBInterface;
@@ -63,7 +64,7 @@ public class PomScannerCommand implements Command {
         MavenXpp3Reader pomReader = new MavenXpp3Reader();
         try { 
             
-            VictimsDBInterface db = VictimsDB.db();
+            VictimsDBInterface db = Environment.getInstance().getDatabase();
             Model model = pomReader.read(new FileReader(pomFile));
             for (Dependency dep : model.getDependencies()){
                 

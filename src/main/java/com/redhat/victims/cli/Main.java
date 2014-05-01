@@ -202,20 +202,11 @@ public class Main {
             System.setProperty(Repl.VERBOSE, "true");
         }
 
-        VictimsDBInterface evd = null;
-        VictimsResultCache cache = null;
-        try {
-            evd = VictimsDB.db();
-            cache = new VictimsResultCache();
-        } catch (VictimsException e){
-            System.err.println(e.getMessage());
-        }
-
         Repl repl = new Repl();
         repl.register(new ConfigureCommand());
         repl.register(new LastUpdateCommand());
         repl.register(new SynchronizeCommand());
-        repl.register(new ScanFileCommand(evd, cache));
+        repl.register(new ScanFileCommand());
         repl.register(new ScanDirCommand(opts.getOption(RECUR_FLAG).flagSet(), repl));
         repl.register(new PomScannerCommand());
         repl.register(new DumpCommand());
@@ -236,7 +227,6 @@ public class Main {
         setConfig(repl, opts, VICTIMS_DB_DRIVER);
         setConfig(repl, opts, VICTIMS_SERVICE_URI);
         setConfig(repl, opts, VICTIMS_SERVICE_ENTRY);
-
 
 
         if (opts.getOption(VERSION_FLAG).flagSet()){
@@ -276,17 +266,17 @@ public class Main {
             System.exit(0);
         }
 
-        if (evd != null){
-            try {
-                int records = evd.getRecordCount();
-                if (records <= 0){
-                    System.err.println("WARNING: Victims database is empty!"
-                            + " Run command again with the "
-                            + SYNC_FLAG + " flag.");
-                }
-            } catch (VictimsException e){
-                System.err.println(e.getMessage());
+
+        Environment env = Environment.getInstance();
+        try {
+            int records = env.getDatabase().getRecordCount();
+            if (records <= 0){
+                System.err.println("WARNING: Victims database is empty!"
+                        + " Run command again with the "
+                        + SYNC_FLAG + " flag.");
             }
+        } catch (VictimsException e){
+            System.err.println(e.getMessage());
         }
 
         // Remaining files / directories as arguments

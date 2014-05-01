@@ -24,6 +24,7 @@ import com.redhat.victims.VictimsException;
 import com.redhat.victims.VictimsRecord;
 import com.redhat.victims.VictimsResultCache;
 import com.redhat.victims.VictimsScanner;
+import com.redhat.victims.cli.Environment;
 import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.results.ExitFailure;
 import com.redhat.victims.cli.results.ExitInvalid;
@@ -49,20 +50,12 @@ public class ScanFileCommand implements Command {
 
     public static final String COMMAND_NAME = "scan-file";
 
-    private VictimsDBInterface db;
-    private VictimsResultCache cache;
     private Usage help;
     private List<String> arguments;
 
-    public ScanFileCommand() {
-        this(null, null);
-    }
-
-    public ScanFileCommand(VictimsDBInterface database, VictimsResultCache resultCache){
+    public ScanFileCommand(){
         help = new Usage(getName(), "Scans the supplied .jar file and reports any vulnerabilities");
         help.addExample("path/to/file.jar");
-        db = database;
-        cache = resultCache;
     }
 
     @Override
@@ -93,20 +86,6 @@ public class ScanFileCommand implements Command {
 
     }
 
-    private VictimsDBInterface getDatabase() throws VictimsException {
-        if (db == null) {
-            db = VictimsDB.db();
-        }
-        return db;
-    }
-
-    private VictimsResultCache getCache() throws VictimsException {
-        if (cache == null){
-            cache = new VictimsResultCache();
-        }
-        return cache;
-    }
-
     @Override
     public CommandResult execute(List<String> args) {
 
@@ -114,12 +93,12 @@ public class ScanFileCommand implements Command {
             return new ExitInvalid("file or directory expected");
         }
 
+        VictimsResultCache cache = null;
+        VictimsDBInterface db = null;
         try {
-            getDatabase();
-            getCache();
-
-        } catch (VictimsException e) {
-            //e.printStackTrace();
+            db = Environment.getInstance().getDatabase();
+            cache = Environment.getInstance().getCache();
+        } catch (VictimsException e){
             return new ExitFailure(e.getMessage());
         }
 
@@ -163,6 +142,7 @@ public class ScanFileCommand implements Command {
                 for (VictimsRecord record : records) {
 
                     try {
+
                         HashSet<String> cves = db.getVulnerabilities(record);
                         if (key != null) {
                             cache.add(key, cves);
@@ -207,7 +187,7 @@ public class ScanFileCommand implements Command {
 
     @Override
     public Command newInstance() {
-        return new ScanFileCommand(db, cache);
+        return new ScanFileCommand();
     }
 
 }

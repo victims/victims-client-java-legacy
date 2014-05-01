@@ -23,6 +23,8 @@ package com.redhat.victims.cli.commands;
 
 
 import java.util.List;
+
+import com.redhat.victims.cli.Environment;
 import com.redhat.victims.cli.results.CommandResult;
 import java.util.concurrent.Callable;
 

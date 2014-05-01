@@ -22,6 +22,7 @@ package com.redhat.victims.cli.commands;
  */
 
 import com.redhat.victims.VictimsException;
+import com.redhat.victims.cli.Environment;
 import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.results.ExitFailure;
 import com.redhat.victims.cli.results.ExitSuccess;
@@ -51,8 +52,9 @@ public class LastUpdateCommand  implements Command {
 
     @Override
     public CommandResult execute(List<String> args) {
-          try { 
-            VictimsDBInterface db = VictimsDB.db();       
+          try {
+
+            VictimsDBInterface db = Environment.getInstance().getDatabase();
             return new ExitSuccess("Database last updated on: " + db.lastUpdated().toString());
                     
         } catch (VictimsException e){
