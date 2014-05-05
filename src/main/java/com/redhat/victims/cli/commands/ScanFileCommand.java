@@ -38,9 +38,8 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  *
@@ -86,6 +85,74 @@ public class ScanFileCommand implements Command {
 
     }
 
+    private boolean isEmptyFile(String filename){
+        File check = new File(filename);
+        return check.exists() && check.isFile() && check.length() == 0;
+    }
+
+    private Set<String> cachedVulnerabilities(String key) throws VictimsException {
+        if (key != null && Environment.getInstance().getCache().exists(key)) {
+            return Environment.getInstance().getCache().get(key);
+        }
+        return null;
+    }
+
+    private void cacheVulnerabilities(String key, Set<String> vulns) throws VictimsException {
+        Environment.getInstance().getCache().add(key, vulns);
+    }
+
+    private void processRecords(ArrayList<VictimsRecord> records, CopyOnWriteArraySet<String> vulns, CommandResult result) throws VictimsException {
+
+        // Reasonable number of records to process sequentially
+        int cores = Runtime.getRuntime().availableProcessors();
+        if (records.size() < cores * 2){
+            for (VictimsRecord record : records){
+                vulns.addAll(Environment.getInstance().getDatabase().getVulnerabilities(record));
+            }
+
+        // Otherwise process using worker pool
+        } else {
+            GetVulnerabilities[] workers = new GetVulnerabilities[cores];
+            ConcurrentLinkedQueue<VictimsRecord> work = new ConcurrentLinkedQueue<VictimsRecord>(records);
+
+            // Process work
+            for (int i = 0; i < workers.length; ++i) {
+                workers[i] = new GetVulnerabilities(work, vulns);
+                workers[i].start();
+            }
+
+            /// Wait for jobs to be done
+            for (int i = 0; i < workers.length; ++i) {
+
+                try {
+                    workers[i].join();
+                    Throwable e = workers[i].getError();
+                    if (e != null) {
+                        result.addOutput("ERROR: " + e.getMessage());
+                        result.addVerboseOutput(e.toString());
+                    }
+
+                } catch (InterruptedException e) {
+                    throw new VictimsException("ERROR: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    private void reportVulnerabilities(Collection<String> cves, String filename, CommandResult result){
+
+        if (cves != null && cves.size() > 0){
+            result.addOutput(String.format("%s VULNERABLE! ", filename));
+            for (String cve : cves) {
+                result.addOutput(cve);
+                result.addOutput(" ");
+            }
+
+        } else {
+            result.addVerboseOutput(filename + " - ok");
+        }
+    }
+
     @Override
     public CommandResult execute(List<String> args) {
 
@@ -93,76 +160,40 @@ public class ScanFileCommand implements Command {
             return new ExitInvalid("file or directory expected");
         }
 
-        VictimsResultCache cache = null;
-        VictimsDBInterface db = null;
-        try {
-            db = Environment.getInstance().getDatabase();
-            cache = Environment.getInstance().getCache();
-        } catch (VictimsException e){
-            return new ExitFailure(e.getMessage());
-        }
-
         CommandResult result = new CommandResult();
         for (String arg : args) {
 
-            // Skip empty files.. 
-            File check = new File(arg);
-            if (check.exists() && check.isFile() && check.length() == 0){
-                result.addOutput(String.format("skipping %s (empty file)", arg));
-                continue;
-            } 
-            
-            // Check cache 
-            String key = checksum(arg);
-            if (key != null && cache.exists(key)) {
-                try {
-                    HashSet<String> cves = cache.get(key);
-                    if (cves != null && cves.size() > 0) {
-                        result.addOutput(String.format("%s VULNERABLE! ", arg));
-                        for (String cve : cves) {
-                            result.addOutput(cve);
-                            result.addOutput(" ");
-                        }
-
-                        continue;
-                    } else {
-                        result.addVerboseOutput(arg + " ok");
-                    }
-                } catch (VictimsException e) {
-                    //e.printStackTrace();
-                    result.addVerboseOutput(e.getMessage());
-                }
-            }
-
-            // Scan the item
-            ArrayList<VictimsRecord> records = new ArrayList();
             try {
-
-                VictimsScanner.scan(arg, records);
-                for (VictimsRecord record : records) {
-
-                    try {
-
-                        HashSet<String> cves = db.getVulnerabilities(record);
-                        if (key != null) {
-                            cache.add(key, cves);
-                        }
-                        if (!cves.isEmpty()) {
-                            result.addOutput(String.format("%s VULNERABLE! ", arg));
-                            for (String cve : cves) {
-                                result.addOutput(cve);
-                                result.addOutput(" ");
-                            }
-                        } else {
-                            result.addVerboseOutput(arg + " ok");
-                        }
-
-                    } catch (VictimsException e) {
-                        //e.printStackTrace();
-                        return new ExitFailure(e.getMessage());
-                    }
+                // Skip empty files..
+                if (isEmptyFile(arg)){
+                    result.addOutput(String.format("skipping %s (empty file)", arg));
+                    continue;
                 }
+
+                // Use cache
+                String key = checksum(arg);
+                Set<String> cached = cachedVulnerabilities(key);
+                if (cached != null) {
+                    reportVulnerabilities(cached, arg, result);
+                    continue;
+                }
+
+                // Perform Scan
+                CopyOnWriteArraySet<String> scanResults = new CopyOnWriteArraySet<String>();
+                processRecords(VictimsScanner.getRecords(arg), scanResults, result);
+                reportVulnerabilities(scanResults, arg, result);
+
+                // Cache results
+                if (key != null){
+                    cacheVulnerabilities(key, scanResults);
+                }
+
+
             } catch (IOException e) {
+                //e.printStackTrace();
+                return new ExitFailure(e.getMessage());
+
+            } catch (VictimsException e){
                 //e.printStackTrace();
                 return new ExitFailure(e.getMessage());
             }
@@ -190,4 +221,34 @@ public class ScanFileCommand implements Command {
         return new ScanFileCommand();
     }
 
+    private class GetVulnerabilities extends Thread {
+
+
+        private ConcurrentLinkedQueue<VictimsRecord> records;
+        private CopyOnWriteArraySet<String> cves;
+        private Throwable error;
+
+        GetVulnerabilities(ConcurrentLinkedQueue<VictimsRecord> records,
+                           CopyOnWriteArraySet<String> cves) {
+            this.records = records;
+            this.cves = cves;
+        }
+
+        public void run(){
+            VictimsRecord record;
+
+            while (error == null && (record = records.poll()) != null){
+                try{
+                    cves.addAll(Environment.getInstance().getDatabase().getVulnerabilities(record));
+                } catch (VictimsException e){
+                    error = e;
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public Throwable getError(){
+            return error;
+        }
+    }
 }
