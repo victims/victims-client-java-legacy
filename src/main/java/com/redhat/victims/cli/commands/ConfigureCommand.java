@@ -23,9 +23,11 @@ package com.redhat.victims.cli.commands;
 
 
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+
+import com.redhat.victims.cli.common.VictimsConfigurationHelper;
 import com.redhat.victims.cli.results.*;
 
 /**
@@ -37,23 +39,8 @@ public class ConfigureCommand implements Command {
     
     public static final String COMMAND_NAME = "config";
 
-    final static List<String> settings;
-    
-    static {
-        List<String> keys = new ArrayList();
-        keys.add("victims.service.uri"); 
-        keys.add("victims.service.entry"); 
-        keys.add("victims.encoding"); 
-        keys.add("victims.home"); 
-        keys.add("victims.cache.purge"); 
-        keys.add("victims.algorithms"); 
-        keys.add("victims.db.driver"); 
-        keys.add("victims.db.url"); 
-        keys.add("victims.db.user"); 
-        keys.add("victims.db.pass");
-        keys.add("victims.db.purge");
-        settings = Collections.unmodifiableList(keys);
-    };
+    final static Set<String> settings = Collections
+            .unmodifiableSet(VictimsConfigurationHelper.getKeys());
     
     private Usage help;
     private List<String> arguments; 
