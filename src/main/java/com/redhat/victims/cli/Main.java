@@ -24,6 +24,7 @@ package com.redhat.victims.cli;
 import com.redhat.victims.VictimsException;
 import com.redhat.victims.VictimsResultCache;
 import com.redhat.victims.cli.commands.*;
+import com.redhat.victims.cli.common.VictimsConfigurationHelper;
 import com.redhat.victims.cli.results.CommandResult;
 import com.redhat.victims.cli.results.ExitTerminate;
 import com.redhat.victims.database.VictimsDB;
@@ -73,13 +74,6 @@ public class Main {
     // Options with arguments
     static final String JAR_INFO                = "--jar-info";
     static final String COMPARE_JARS            = "--jar-compare";
-    static final String VICTIMS_HOME            = "--victims-home";
-    static final String VICTIMS_DB_USER         = "--victims-db-user";
-    static final String VICTIMS_DB_PASS         = "--victims-db-pass";
-    static final String VICTIMS_DB_URL          = "--victims-db-url";
-    static final String VICTIMS_DB_DRIVER       = "--vicitms-db-driver";
-    static final String VICTIMS_SERVICE_URI     = "--victims-service-uri";
-    static final String VICTIMS_SERVICE_ENTRY   = "--victims-service-entry";
 
     final static Map<String, String> OPTIONS;
 
@@ -87,13 +81,10 @@ public class Main {
         Map<String, String> tmp = new HashMap();
         tmp.put(JAR_INFO,               "displays fingerprint information of the supplied jar file");
         tmp.put(COMPARE_JARS,           "compare the hashes of two jar files. Specify the jar files with , as a delimiter, i.e. file1.jar,file2.jar");
-        tmp.put(VICTIMS_HOME,           "set the directory where victims data should be stored");
-        tmp.put(VICTIMS_DB_USER,        "set the user to connect to the victims database");
-        tmp.put(VICTIMS_DB_PASS,        "set the password to use to connect to the victims database");
-        tmp.put(VICTIMS_DB_URL,         "the jdbc url connection string to use with the victims database");
-        tmp.put(VICTIMS_DB_DRIVER,      "the jdbc driver to use when connecting to the victims database");
-        tmp.put(VICTIMS_SERVICE_URI,    "the uri to use to synchronize with the victims database");
-        tmp.put(VICTIMS_SERVICE_ENTRY,  "the uri path to use when connecting to the victims service");
+        for (String key : VictimsConfigurationHelper.getKeys()) {
+            tmp.put(VictimsConfigurationHelper.getOptionFromKey(key),
+                    VictimsConfigurationHelper.getDescriptionFromKey(key));
+        }
         OPTIONS = Collections.unmodifiableMap(tmp);
     };
 
@@ -112,7 +103,9 @@ public class Main {
 
     private static void setConfig(Repl repl, CommandLineOptions opts, String cfgitem){
         if (opts.getOption(cfgitem).hasValue()){
-            repl.runCommand(ConfigureCommand.COMMAND_NAME, "set", extractValue(opts, cfgitem));
+            repl.runCommand(ConfigureCommand.COMMAND_NAME, "set",
+                    VictimsConfigurationHelper.getKeyFromOption(cfgitem),
+                    extractValue(opts, cfgitem));
         }
     }
 
@@ -220,14 +213,9 @@ public class Main {
         }
 
         // Configure victims environment overrides.
-        setConfig(repl, opts, VICTIMS_HOME);
-        setConfig(repl, opts, VICTIMS_DB_PASS);
-        setConfig(repl, opts, VICTIMS_DB_USER);
-        setConfig(repl, opts, VICTIMS_DB_URL);
-        setConfig(repl, opts, VICTIMS_DB_DRIVER);
-        setConfig(repl, opts, VICTIMS_SERVICE_URI);
-        setConfig(repl, opts, VICTIMS_SERVICE_ENTRY);
-
+        for (String opt : VictimsConfigurationHelper.getOptions()) {
+            setConfig(repl, opts, opt);
+        }
 
         if (opts.getOption(VERSION_FLAG).flagSet()){
             repl.runSynchronousCommand(VersionCommand.COMMAND_NAME);
