@@ -66,7 +66,11 @@ public class PomScannerCommand implements Command {
             
             VictimsDBInterface db = Environment.getInstance().getDatabase();
             Model model = pomReader.read(new FileReader(pomFile));
-            for (Dependency dep : model.getDependencies()){
+            List<Dependency> dependencies =
+                model.getDependencyManagement().getDependencies();
+            dependencies.addAll(model.getDependencies());
+
+            for (Dependency dep : dependencies){
                 
                 HashMap<String, String> gav = new HashMap();
                 String groupId = dep.getGroupId();
