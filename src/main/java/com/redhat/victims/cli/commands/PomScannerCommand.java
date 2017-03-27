@@ -33,7 +33,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ArrayList;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -66,12 +68,16 @@ public class PomScannerCommand implements Command {
             
             VictimsDBInterface db = Environment.getInstance().getDatabase();
             Model model = pomReader.read(new FileReader(pomFile));
-            List<Dependency> dependencies =
-                model.getDependencyManagement().getDependencies();
-            dependencies.addAll(model.getDependencies());
+            List<Dependency> dependencies = model.getDependencies();
+            DependencyManagement dependencyManagement = model.getDependencyManagement();
+            if (dependencyManagement != null){
+                if (dependencies == null){
+                    dependencies = new ArrayList<Dependency>();
+                }
+                dependencies.addAll(dependencyManagement.getDependencies());
+            }
 
             for (Dependency dep : dependencies){
-                
                 HashMap<String, String> gav = new HashMap();
                 String groupId = dep.getGroupId();
                 String artifactId = dep.getArtifactId();
