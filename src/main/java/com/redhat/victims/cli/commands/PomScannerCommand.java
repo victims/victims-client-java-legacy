@@ -69,11 +69,11 @@ public class PomScannerCommand implements Command {
             VictimsDBInterface db = Environment.getInstance().getDatabase();
             Model model = pomReader.read(new FileReader(pomFile));
             List<Dependency> dependencies = model.getDependencies();
+            if (dependencies == null){
+                dependencies = new ArrayList<Dependency>();
+            }
             DependencyManagement dependencyManagement = model.getDependencyManagement();
             if (dependencyManagement != null){
-                if (dependencies == null){
-                    dependencies = new ArrayList<Dependency>();
-                }
                 dependencies.addAll(dependencyManagement.getDependencies());
             }
 
