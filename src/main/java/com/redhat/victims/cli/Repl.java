@@ -26,21 +26,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.redhat.victims.cli.commands.Command;
-import com.redhat.victims.cli.commands.MapCommand;
-import com.redhat.victims.cli.results.CommandResult;
-import com.redhat.victims.cli.commands.HelpCommand;
-import com.redhat.victims.cli.commands.ExitCommand;
-import com.redhat.victims.cli.results.ExitTerminate;
-
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -48,6 +38,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.redhat.victims.cli.commands.Command;
+import com.redhat.victims.cli.commands.ExitCommand;
+import com.redhat.victims.cli.commands.HelpCommand;
+import com.redhat.victims.cli.commands.MapCommand;
+import com.redhat.victims.cli.results.CommandResult;
+import com.redhat.victims.cli.results.ExitTerminate;
 
 
 /**
@@ -75,34 +74,34 @@ public class Repl {
     private static Pattern commandPattern = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
 
     /** Prompt to display in interactive mode */
-    private String prompt;
+    private final String prompt;
 
     /** Source of input to the REPL */
-    private BufferedReader in;
+    private final BufferedReader in;
 
     /** Output source for the REPL */
-    private PrintStream out;
+    private final PrintStream out;
 
     /** Symbol table for commands */
-    private Map<String, Command> commands;
+    private final Map<String, Command> commands;
 
     /** Are we in verbose mode? */
-    private boolean verbose;
+    private final boolean verbose;
 
     /** Are we in interactive mode */
-    private boolean interactive;
+    private final boolean interactive;
 
     /** Are we currently being shutdown (don't schedule any more commands) */
     private boolean shuttingDown;
 
     /** Executor service used to asynchronously perform commands */
-    private ExecutorService executor;
+    private final ExecutorService executor;
 
     /** The completer service used with the executor */
-    private ExecutorCompletionService<CommandResult> completor;
+    private final ExecutorCompletionService<CommandResult> completor;
 
     /** The number of jobs currently scheduled to be run. */
-    private AtomicInteger running;
+    private final AtomicInteger running;
 
 
     /**
@@ -380,11 +379,10 @@ public class Repl {
             return;
         }
 
+        out.println(r.getOutput());
+
         if (verbose && r.getVerboseOutput() != null) {
             out.println(r.getVerboseOutput());
-
-        } else {
-            out.println(r.getOutput());
         }
 
     }
