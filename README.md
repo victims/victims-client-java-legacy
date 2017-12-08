@@ -1,4 +1,4 @@
-victims-client-java [![Build Status](https://travis-ci.org/victims/victims-client-java.png)](https://travis-ci.org/victims/victims-client-java)
+victims-client-java [![Build Status](https://travis-ci.org/victims/victims-client-java-legacy.svg?branch=master](https://travis-ci.org/victims/victims-client-java-legacy)
 ===================
 
 
